@@ -1,6 +1,7 @@
 <script lang="ts">
 import { animate } from 'motion/mini';
 import { flushSync, onMount } from 'svelte';
+import { capturePageSlide, pageSlideDuration } from '#lib/motion/page-slide.js';
 import { animateScene, easeOut, motionAllowed } from '#lib/motion/scene.js';
 import { captureSharedArt } from '#lib/motion/shared-art.js';
 import { afterNavigate, beforeNavigate, onNavigate } from '$app/navigation';
@@ -60,6 +61,7 @@ onNavigate((navigation) => {
 		(from === '/' && to === '/about') || (from === '/about' && to === '/')
 			? captureSharedArt(main)
 			: undefined;
+	const slide = fromChapter === 1 && toChapter === 1 ? capturePageSlide(main) : undefined;
 	const current = generation;
 	const direction =
 		navigation.type === 'popstate' && navigation.delta
@@ -77,16 +79,18 @@ onNavigate((navigation) => {
 	// Clear a pending network skeleton before animating the actual page content.
 	flushSync();
 
-	// Animate real content rather than snapshots: the fixed header stays live
-	// and a second click can cancel this transition immediately.
-	const outgoing = animate(
-		main,
-		{ opacity: 0, transform: `translateY(${-direction * 18}px)` },
-		{ duration: 0.14, ease: easeOut }
-	);
+	// The fixed header stays live, and a second click can cancel any transition.
+	const outgoing = slide
+		? undefined
+		: animate(
+				main,
+				{ opacity: 0, transform: `translateY(${-direction * 18}px)` },
+				{ duration: 0.14, ease: easeOut }
+			);
 	cancelPlayback = () => {
-		outgoing.cancel();
+		outgoing?.cancel();
 		shared?.cancel();
+		slide?.cancel();
 		restore();
 	};
 
@@ -99,7 +103,7 @@ onNavigate((navigation) => {
 			resolve(() => {
 				if (current !== generation) return;
 				releaseNavigation = () => {};
-				outgoing.cancel();
+				outgoing?.cancel();
 				restore();
 				shared?.hideDestination();
 				// Measure after SvelteKit has restored the new page's scroll position.
@@ -108,20 +112,27 @@ onNavigate((navigation) => {
 					if (current !== generation) return;
 					restore();
 					const artworkFinished = shared?.play();
+					const slideFinished = slide?.play();
 					const incoming = animate(
 						main,
 						{
-							opacity: [0, 1],
-							transform: [`translateY(${shared ? 0 : direction * 24}px)`, 'translateY(0px)']
+							opacity: slide ? [1, 1] : [0, 1],
+							transform: slide
+								? [`translate3d(${-slide.distance}px, 0, 0)`, 'translate3d(0, 0, 0)']
+								: [`translateY(${shared ? 0 : direction * 24}px)`, 'translateY(0px)']
 						},
-						{ duration: shared ? 0.46 : 0.32, ease: shared ? 'easeInOut' : easeOut }
+						{
+							duration: slide ? pageSlideDuration : shared ? 0.46 : 0.32,
+							ease: shared ? 'easeInOut' : easeOut
+						}
 					);
 					cancelPlayback = () => {
 						incoming.cancel();
 						shared?.cancel();
+						slide?.cancel();
 						restore();
 					};
-					void Promise.all([Promise.resolve(incoming), artworkFinished]).then(() => {
+					void Promise.all([Promise.resolve(incoming), artworkFinished, slideFinished]).then(() => {
 						if (current !== generation) return;
 						cancelPlayback();
 						cancelPlayback = () => {};
@@ -132,6 +143,7 @@ onNavigate((navigation) => {
 				cancelPlayback = () => {
 					cancelAnimationFrame(frame);
 					shared?.cancel();
+					slide?.cancel();
 					restore();
 				};
 			});
@@ -139,8 +151,8 @@ onNavigate((navigation) => {
 		// A paused tab or animation must never keep the router waiting indefinitely.
 		const watchdog = setTimeout(release, 220);
 		releaseNavigation = release;
-		if (shared) release();
-		else void outgoing.then(release, release);
+		if (shared || slide) release();
+		else void outgoing?.then(release, release);
 	});
 });
 

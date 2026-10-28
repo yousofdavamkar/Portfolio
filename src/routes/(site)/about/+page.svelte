@@ -21,9 +21,9 @@ let introComplete = $state(false);
 onMount(() => {
 	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 	const started = performance.now();
-	const labelStart = 200;
-	const questionStart = labelStart + label.length * 55 + 180;
-	const topicsStart = questionStart + question.length * 30 + 180;
+	const labelStart = 120;
+	const questionStart = labelStart + label.length * 40 + 120;
+	const topicsStart = questionStart + question.length * 22 + 120;
 	let frame = 0;
 	const finish = () => {
 		cancelAnimationFrame(frame);
@@ -31,17 +31,17 @@ onMount(() => {
 	};
 	const tick = (now: number) => {
 		const elapsed = now - started;
-		labelLetters = Math.min(label.length, Math.max(0, Math.floor((elapsed - labelStart) / 55)));
+		labelLetters = Math.min(label.length, Math.max(0, Math.floor((elapsed - labelStart) / 40)));
 		questionStarted = elapsed >= questionStart;
 		questionLetters = Math.min(
 			question.length,
-			Math.max(0, Math.floor((elapsed - questionStart) / 30))
+			Math.max(0, Math.floor((elapsed - questionStart) / 22))
 		);
 		visibleTopics =
 			elapsed < topicsStart
 				? 0
-				: Math.min(aboutSections.length, 1 + Math.floor((elapsed - topicsStart) / 110));
-		if (elapsed >= topicsStart + (aboutSections.length - 1) * 110 + 280) finish();
+				: Math.min(aboutSections.length, 1 + Math.floor((elapsed - topicsStart) / 75));
+		if (elapsed >= topicsStart + (aboutSections.length - 1) * 75 + 220) finish();
 		else frame = requestAnimationFrame(tick);
 	};
 	const preference = () => {
@@ -152,8 +152,8 @@ onMount(() => {
 	visibility: hidden;
 	transform: translateY(12px);
 	transition:
-		opacity 280ms var(--ease-out),
-		transform 280ms var(--ease-out);
+		opacity 220ms var(--ease-out),
+		transform 220ms var(--ease-out);
 }
 .topic-reveal.topic-visible {
 	opacity: 1;
