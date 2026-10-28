@@ -55,7 +55,12 @@ const links = [
 			<Sheet.Trigger class="round-button mobile-menu" aria-label="Open navigation"
 				><MenuIcon expanded={open} /></Sheet.Trigger
 			>
-			<Sheet.Content side="left" class="mobile-sheet" showCloseButton={false}>
+			<Sheet.Content
+				side="left"
+				class="mobile-sheet"
+				overlayClass="mobile-menu-overlay"
+				showCloseButton={false}
+			>
 				<Sheet.Close>
 					{#snippet child({ props })}
 						<Button
@@ -106,7 +111,9 @@ const links = [
 	opacity: 0;
 	transform: translateX(-10px) scale(0.98);
 	visibility: hidden;
-	transition-delay: 0s, 0s, 240ms;
+	/* Let all four links finish before fading the pill itself. */
+	transition-duration: 160ms, 160ms, 0s;
+	transition-delay: 325ms, 325ms, 485ms;
 }
 .animated-menu a {
 	opacity: 1;
@@ -119,16 +126,40 @@ const links = [
 .animated-menu.collapsed a {
 	opacity: 0;
 	transform: translateX(-14px);
-	transition-duration: 130ms, 160ms;
-	transition-delay: calc((3 - var(--menu-index)) * 25ms);
+	transition-duration: 180ms, 220ms;
+	transition-delay: calc((3 - var(--menu-index)) * 35ms);
 }
 .mobile-menu-links[data-menu-open="true"] a {
 	animation: menu-item-enter 220ms var(--ease-out) both;
 	animation-delay: calc(55ms + var(--menu-index) * 45ms);
 }
 .mobile-menu-links[data-menu-open="false"] a {
-	animation: menu-item-exit 110ms ease both;
-	animation-delay: calc((3 - var(--menu-index)) * 25ms);
+	animation: menu-item-exit 220ms var(--ease-out) both;
+	animation-delay: calc((3 - var(--menu-index)) * 35ms);
+}
+:global(.mobile-sheet[data-state="closed"]) {
+	animation: mobile-menu-exit 160ms var(--ease-out) 325ms both;
+}
+:global(.mobile-menu-overlay[data-state="closed"]) {
+	animation: mobile-menu-backdrop-exit 160ms ease 325ms both;
+}
+@keyframes mobile-menu-exit {
+	from {
+		opacity: 1;
+		transform: translateX(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateX(-40px);
+	}
+}
+@keyframes mobile-menu-backdrop-exit {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
 }
 @keyframes menu-item-enter {
 	from {
@@ -162,7 +193,9 @@ const links = [
 	.animated-menu a {
 		transition: none;
 	}
-	.mobile-menu-links a {
+	.mobile-menu-links a,
+	:global(.mobile-sheet[data-state="closed"]),
+	:global(.mobile-menu-overlay[data-state="closed"]) {
 		animation: none;
 	}
 }

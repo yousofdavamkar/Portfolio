@@ -14,6 +14,7 @@ import SheetPortal from './sheet-portal.svelte';
 let {
 	ref = $bindable(null),
 	class: className,
+	overlayClass,
 	side = 'right',
 	showCloseButton = true,
 	portalProps,
@@ -22,13 +23,14 @@ let {
 }: WithoutChildrenOrChild<SheetPrimitive.ContentProps> & {
 	portalProps?: WithoutChildrenOrChild<ComponentProps<typeof SheetPortal>>;
 	side?: Side;
+	overlayClass?: string;
 	showCloseButton?: boolean;
 	children: Snippet;
 } = $props();
 </script>
 
 <SheetPortal {...portalProps}>
-	<SheetOverlay />
+	<SheetOverlay class={overlayClass} />
 	<SheetPrimitive.Content
 		bind:ref
 		data-slot="sheet-content"
