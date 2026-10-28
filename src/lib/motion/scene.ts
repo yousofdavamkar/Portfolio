@@ -57,7 +57,7 @@ export function animateScene(root: HTMLElement, entrance: boolean) {
 		});
 	}
 	return () => {
-		for (const cleanup of cleanups.reverse()) cleanup();
+		for (const cleanup of cleanups.splice(0).reverse()) cleanup();
 	};
 }
 

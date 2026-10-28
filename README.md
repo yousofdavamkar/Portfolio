@@ -5,7 +5,7 @@ A responsive SvelteKit portfolio and authenticated content studio, based on the 
 ## Stack
 
 - Svelte 5, SvelteKit 3, TypeScript, Tailwind CSS 4 and shadcn-svelte.
-- Zustand's vanilla store for browser preferences, bridged into Svelte subscriptions.
+- Zustand's vanilla store for project navigation, bridged into Svelte subscriptions.
 - Framework-independent `swr-store` for resume lookup and revalidation.
 - Convex for published content, authenticated administration, uploads and a rate-limited contact inbox.
 - Convex Auth password sessions held in HttpOnly cookies; public account registration is disabled.
@@ -46,7 +46,7 @@ The Node adapter writes `build/`. Configure a production Convex deployment, its 
 
 ## Design and accessibility
 
-Layouts adapt from phone to desktop. Navigation uses a mobile sheet, and the studio uses accessible shadcn dialogs and tabs. Motion is reduced for reduced-motion preferences and keyboard input. Poppins is self-hosted. The original dark palette, yellow accent, speech bubbles and geometric portrait framing are retained; accent preferences are saved in the browser.
+Layouts adapt from phone to desktop. Navigation uses a mobile sheet, and the studio uses accessible shadcn dialogs and tabs. Motion is reduced for reduced-motion preferences and keyboard input. Poppins is self-hosted. The original dark palette, yellow accent, speech bubbles and geometric portrait framing are retained. The portfolio uses a fixed dark theme with a yellow accent; there is no theme picker or saved color preference.
 
 References: [original Figma](https://www.figma.com/design/Gis2vvOMoRcwh63BEEAmuW/portfolio), [shadcn-svelte](https://www.shadcn-svelte.com/docs), [SvelteKit](https://svelte.dev/docs/kit), [Convex](https://docs.convex.dev/). Emil design guidance informed interaction polish. Firecrawl was attempted, but its requests failed in this environment; no Firecrawl research results are represented as verified.
 
@@ -56,6 +56,8 @@ The [shadcn-svelte Skeleton](https://www.shadcn-svelte.com/docs/components/skele
 
 ## Motion and page transitions
 
-[Motion's official Svelte 5 integration](https://motion.dev/docs/svelte) powers the public portfolio with `animateView`, `animate`, `inView`, and `scroll`. The next-page arrows and navigation links use a vertical page sweep, staggered content, shared portrait/project artwork, and a chapter interlude with concentric rings and accent graphics. Browser back reverses the direction. A scroll-progress line and rotating orbit respond to normal document scrolling; scrolling is not hijacked.
+[Motion's official Svelte 5 integration](https://motion.dev/docs/svelte) powers short, coordinated page transitions and scroll reveals. The current content fades and shifts out over 140 ms; the next page enters over 320 ms. The header remains live, browser back reverses direction, and a second navigation cancels the old animation. The page is animated as one surface, avoiding overlapping section snapshots and chapter overlays. A scroll-progress line and rotating orbit respond to normal document scrolling.
 
-The router retains its normal history, focus and scroll behavior. Data-loading skeletons clear before outgoing snapshots are captured. Reduced-motion preferences and keyboard navigation skip decorative transitions, and older browsers receive a simple entry animation. Observers and animations are cleaned up between pages. Authentication and dashboard routes do not use the public portfolio's cinematic transitions.
+The router retains normal history, focus, and scroll behavior. Reduced-motion preferences and keyboard navigation skip decorative transitions. Animation cleanup restores the page's original styles, and a bounded timeout prevents an outgoing animation from blocking navigation. Scroll reveals start after the page transition finishes, without replaying an entrance animation. Authentication and dashboard routes do not animate.
+
+Run `npm run test:e2e` for browser regressions covering rapid clicks during both transition phases, next-page links, history, keyboard cancellation, reduced motion, the removed theme picker, and mobile navigation. The tests start a local development server on port 5180 when one is not already running.

@@ -16,7 +16,8 @@
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"setup:dev": "node scripts/provision-dev.ts",
-		"tsc": "node node_modules/@typescript/native/bin/tsc"
+		"tsc": "node node_modules/@typescript/native/bin/tsc",
+		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.6.3",
@@ -31,7 +32,6 @@
 		"@typescript/native": "npm:typescript@7.0.2",
 		"bits-ui": "^2.20.2",
 		"cn": "^0.5.0",
-		"mode-watcher": "^1.1.0",
 		"shadcn-svelte": "^1.7.1",
 		"svelte": "^5.57.1",
 		"svelte-check": "4.7.7",

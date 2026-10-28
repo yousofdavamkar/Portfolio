@@ -48,7 +48,8 @@ $effect(() => {
 .navigation-loading {
 	position: fixed;
 	inset: 0;
-	z-index: 40;
+	/* Keep the real navigation visible and usable during a slow route load. */
+	z-index: 10;
 	background: var(--background);
 	overflow: auto;
 	pointer-events: none;

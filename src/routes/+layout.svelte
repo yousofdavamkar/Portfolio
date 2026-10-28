@@ -29,7 +29,7 @@ let transitioning = $state(false);
 	><link rel="icon" href="/favicon.svg">
 	<meta name="theme-color" content="#121212"></svelte:head
 >
-<div inert={routeLoading && !transitioning} aria-busy={routeLoading || transitioning}>
+<div aria-busy={routeLoading || transitioning}>
 	{@render children()}
 </div>
 <PageTransitions bind:active={transitioning} />

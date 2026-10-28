@@ -1,4 +1,4 @@
 {
 	"extends": ["$app/tsconfig", "./tsconfig.strict.json"],
-	"include": ["src", "scripts", "vite.config.ts"]
+	"include": ["src", "scripts", "vite.config.ts", "tests", "playwright.config.ts"]
 }

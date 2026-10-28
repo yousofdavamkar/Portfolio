@@ -11,6 +11,7 @@
 			"src/**",
 			"convex/**",
 			"scripts/**",
+			"tests/**",
 			"*.json",
 			"*.ts",
 			"!!convex/_generated",

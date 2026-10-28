@@ -1,26 +1,16 @@
 <script lang="ts">
-import { ArrowUpRight, Check, Menu, X } from '@lucide/svelte';
+import { ArrowUpRight, Menu, X } from '@lucide/svelte';
 import { Button } from '#lib/components/ui/button/index.js';
-import * as Dialog from '#lib/components/ui/dialog/index.js';
 import * as Sheet from '#lib/components/ui/sheet/index.js';
-import type { Accent, createPreferences } from '#lib/state/preferences.js';
 import { page } from '$app/state';
 
-let { preferences }: { preferences: ReturnType<typeof createPreferences> } = $props();
 let open = $state(false),
-	collapsed = $state(false),
-	colors = $state(false);
+	collapsed = $state(false);
 const links = [
 	{ href: '/', label: 'Home' },
 	{ href: '/about', label: 'About me' },
 	{ href: '/work', label: 'Portfolio' },
 	{ href: '/contact', label: 'Contact me' }
-];
-const accents: { id: Accent; name: string; color: string }[] = [
-	{ id: 'yellow', name: 'Sunshine', color: '#ffca05' },
-	{ id: 'red', name: 'Coral', color: '#ff7676' },
-	{ id: 'purple', name: 'Lilac', color: '#b397ff' },
-	{ id: 'teal', name: 'Mint', color: '#5edbc5' }
 ];
 </script>
 <header class="site-header">
@@ -80,34 +70,4 @@ const accents: { id: Accent; name: string; color: string }[] = [
 			</Sheet.Content>
 		</Sheet.Root>
 	</div>
-	<Dialog.Root bind:open={colors}>
-		<Dialog.Trigger class="round-button accent-trigger" aria-label="Choose accent color"
-			><span></span></Dialog.Trigger
-		>
-		<Dialog.Content class="color-dialog"
-			><Dialog.Header
-				><Dialog.Title>A little change of mood.</Dialog.Title
-				><Dialog.Description>Pick an accent that feels like you.</Dialog.Description></Dialog.Header
-			>
-			<fieldset class="color-options" aria-label="Accent color">
-				{#each accents as accent}
-					<button
-						type="button"
-						aria-pressed={$preferences.accent === accent.id}
-						style={`--swatch:${accent.color}`}
-						onclick={() => {
-							preferences.setAccent(accent.id);
-							colors = false;
-						}}
-					>
-						<span
-							>{#if $preferences.accent === accent.id}
-								<Check size={18} />
-							{/if}</span
-						>{accent.name}
-					</button>
-				{/each}
-			</fieldset>
-		</Dialog.Content>
-	</Dialog.Root>
 </header>

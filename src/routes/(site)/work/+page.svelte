@@ -6,10 +6,11 @@ import Ornament from '#lib/components/Ornament.svelte';
 import { Badge } from '#lib/components/ui/badge/index.js';
 import { Button } from '#lib/components/ui/button/index.js';
 import { PORTFOLIO, type PortfolioContext } from '#lib/state/portfolio.svelte.js';
-import type { createPreferences } from '#lib/state/preferences.js';
+import type { createProjectNavigation } from '#lib/state/project-navigation.js';
 
 const portfolio = getContext<PortfolioContext>(PORTFOLIO);
-const preferences = getContext<ReturnType<typeof createPreferences>>('preferences');
+const projectNavigation =
+	getContext<ReturnType<typeof createProjectNavigation>>('project-navigation');
 let category = $state('All work');
 const categories = $derived([
 	'All work',
@@ -19,11 +20,11 @@ const projects = $derived(
 	portfolio.content.projects.filter((p) => category === 'All work' || p.category === category)
 );
 const index = $derived(
-	projects.length ? Math.min($preferences.projectIndex, projects.length - 1) : 0
+	projects.length ? Math.min($projectNavigation.projectIndex, projects.length - 1) : 0
 );
 const project = $derived(projects[index]);
 function move(direction: number) {
-	preferences.setProjectIndex((index + direction + projects.length) % projects.length);
+	projectNavigation.setProjectIndex((index + direction + projects.length) % projects.length);
 }
 </script>
 <svelte:head
@@ -44,7 +45,7 @@ function move(direction: number) {
 					variant={category === option ? 'default' : 'outline'}
 					onclick={() => {
 						category = option;
-						preferences.setProjectIndex(0);
+						projectNavigation.setProjectIndex(0);
 					}}
 					aria-pressed={category === option}
 					>{option}</Button

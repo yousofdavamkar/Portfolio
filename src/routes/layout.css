@@ -152,21 +152,6 @@
 	--radius: 0.75rem;
 	--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
-:root[data-accent="red"] {
-	--primary: #ff7676;
-	--secondary-foreground: #ff7676;
-	--ring: #ff7676;
-}
-:root[data-accent="purple"] {
-	--primary: #b397ff;
-	--secondary-foreground: #b397ff;
-	--ring: #b397ff;
-}
-:root[data-accent="teal"] {
-	--primary: #5edbc5;
-	--secondary-foreground: #5edbc5;
-	--ring: #5edbc5;
-}
 @theme inline {
 	--font-sans: "Poppins", sans-serif;
 }
@@ -296,47 +281,6 @@ textarea {
 }
 .mobile-navigation {
 	display: none;
-}
-.accent-trigger span {
-	display: block;
-	width: 27px;
-	height: 27px;
-	background: var(--primary);
-	border-radius: 50%;
-}
-.color-dialog {
-	max-width: 430px;
-}
-.color-options {
-	border: 0;
-	margin: 0;
-	padding: 0;
-	min-width: 0;
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 8px;
-	padding-top: 16px;
-}
-.color-options button {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 12px;
-	padding: 10px 0;
-	font-size: 12px;
-}
-.color-options button > span {
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
-	background: var(--swatch);
-	color: #111;
-	display: grid;
-	place-items: center;
-}
-.color-options button[aria-pressed="true"] > span {
-	outline: 1px solid var(--swatch);
-	outline-offset: 5px;
 }
 .speech {
 	color: #222;
@@ -1589,10 +1533,6 @@ textarea {
 		width: 48px;
 		height: 48px;
 	}
-	.accent-trigger span {
-		width: 24px;
-		height: 24px;
-	}
 	.site-shell {
 		background: linear-gradient(150deg, #101010, #232323 65%, #303030);
 	}
@@ -2085,18 +2025,4 @@ html[data-input="keyboard"] *::after {
 .site-shell > main {
 	position: relative;
 	z-index: 1;
-}
-/* Stable names let Motion morph the same artwork across separate route components. */
-.portrait-scene {
-	view-transition-name: portfolio-portrait;
-}
-.project-art .media-image,
-.detail-art .media-image {
-	view-transition-name: portfolio-project;
-}
-
-/* A closing mobile menu must not appear in the outgoing page snapshot. */
-html[data-page-transition="active"] [data-slot="sheet-content"],
-html[data-page-transition="active"] [data-slot="sheet-overlay"] {
-	visibility: hidden !important;
 }
