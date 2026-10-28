@@ -25,14 +25,14 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 	const shell = document.querySelector('.site-shell')?.getBoundingClientRect();
 	if (shell)
 		layer.style.clipPath = `inset(0 ${Math.max(0, innerWidth - shell.right)}px 0 ${Math.max(0, shell.left)}px)`;
-	const restore: (() => void)[] = [];
+	const visibilityBeforeTransition = new Map<Artwork, string>();
 	const animations: ReturnType<typeof animate>[] = [];
 	const hide = (element: Artwork) => {
-		const visibility = element.style.visibility;
+		// Parameterized topic routes can reuse the same SVG for source and destination.
+		// Save its original visibility once, never the temporary hidden state.
+		if (!visibilityBeforeTransition.has(element))
+			visibilityBeforeTransition.set(element, element.style.visibility);
 		element.style.visibility = 'hidden';
-		restore.push(() => {
-			element.style.visibility = visibility;
-		});
 	};
 	const selector = options.artwork ? `[data-shared-art="${options.artwork}"]` : '[data-shared-art]';
 	const items = Array.from(main.querySelectorAll<Artwork>(selector)).flatMap((source) => {
@@ -84,7 +84,9 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 	document.body.append(layer);
 	const cancel = () => {
 		for (const animation of animations.splice(0)) animation.cancel();
-		for (const reset of restore.splice(0)) reset();
+		for (const [element, visibility] of visibilityBeforeTransition)
+			element.style.visibility = visibility;
+		visibilityBeforeTransition.clear();
 		layer.remove();
 	};
 	return {

@@ -139,3 +139,32 @@ for (const width of [1440, 390]) {
 		}
 	});
 }
+
+for (const interrupt of [false, true]) {
+	test(`the primary arch stays visible between topic pages${interrupt ? ' when interrupted' : ''}`, async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 810 });
+		await page.goto('/about/journey', { waitUntil: 'networkidle' });
+		const arch = page.locator('#main [data-shared-art="ornament"]');
+		await expect(arch).toHaveCSS('visibility', 'visible');
+		for (const [label, slug] of [
+			['My activities', 'activities'],
+			['My soft skills', 'soft-skills'],
+			['My hard skills', 'hard-skills'],
+			['Education & Training', 'education'],
+			['Spoken Languages', 'languages']
+		] as const) {
+			await page.getByRole('link', { name: `Next: ${label}`, exact: true }).click();
+			await expect(page).toHaveURL(new RegExp(`/about/${slug}$`));
+			await expect(page.locator('[data-art-ghost="ornament"]')).toHaveCount(1);
+			if (interrupt) await page.keyboard.press('Escape');
+			await expect(page.locator('[data-shared-art-layer], [data-page-slide-layer]')).toHaveCount(0);
+			await expect(arch).toHaveCSS('visibility', 'visible');
+		}
+		await page.goBack();
+		await expect(page).toHaveURL(/\/about\/education$/);
+		await expect(page.locator('[data-shared-art-layer], [data-page-slide-layer]')).toHaveCount(0);
+		await expect(arch).toHaveCSS('visibility', 'visible');
+	});
+}
