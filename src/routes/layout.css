@@ -465,13 +465,6 @@ textarea {
 	border-color: var(--primary);
 	background: transparent;
 }
-.work-ornament {
-	right: 6%;
-	top: -120px;
-	width: 200px !important;
-	height: 380px !important;
-	opacity: 0.23 !important;
-}
 .work-filters {
 	border: 0;
 	margin: 0;
@@ -1419,13 +1412,6 @@ textarea {
 	.round-outline {
 		width: 46px;
 		height: 46px;
-	}
-	.work-ornament {
-		width: 120px !important;
-		height: 235px !important;
-		right: -25px;
-		top: -94px;
-		opacity: 0.18 !important;
 	}
 	.work-page .section-next {
 		display: none;

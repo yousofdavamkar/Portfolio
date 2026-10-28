@@ -28,3 +28,11 @@ About topic navigation uses a 480ms horizontal slideshow: opening a topic moves 
 The primary gray arch is shared between About and its topic pages. It travels on its own smooth 1.05s path while content keeps the 480ms slideshow. The outgoing slide excludes the shared arch, and the destination arch stays hidden until the moving copy lands. Mobile uses the same primary SVG at the original smaller reference size; the secondary desktop arch stays part of the page. Identical topic-to-topic positions do not add an artificial sideways bow. Navigation interruption restores the real artwork and removes both temporary layers.
 
 About and its topics also share the arch with Portfolio, including the next-page link from Spoken Languages. These chapter changes use the Home-to-About crossfade and 1.05s artwork motion: the gray inverted arch rotates, resizes, and changes to the gold Portfolio U. The portrait remains in the fading About composition. Browser history reverses the shared journey; reduced motion and interruptions retain the same cleanup behavior.
+
+## Portfolio
+
+The desktop Portfolio reference is [frame 66:533](https://www.figma.com/design/Gis2vvOMoRcwh63BEEAmuW/portfolio?node-id=66-533), 1440 × 810, exported from the personal Helium session on October 28, 2026. The full reference is stored locally in `.artifacts/figma-reference/Portfolio.jpg`.
+
+At the reference width, the laptop and pedestal retain their exported 612 × 537 size at (415, 273). The label starts at (93, 144), the copy at (80, 286), and the 56px navigation arrows start at y=490 above the project count. The capsule preview occupies 210 × 314 at (1070, 54). Desktop dimensions scale with the site container; tablet and phone layouts reflow. The extra orbit graphic, vertical caption, category caption, and selected-work eyebrow are removed from this screen.
+
+Project titles, summaries, counts, and preview imagery use the saved project data. The capsule links to the next published project, or the current project when there is only one. Consequently its image and the amount of text can differ from the Figma sample. The existing locally exported laptop asset remains unchanged. Theme controls stay removed as requested. The shared U transition remains on the SVG; the capsule image crossfades with the page.
