@@ -1,0 +1,1 @@
+{"compilerOptions":{"allowJs":true,"types":["node"],"strict":true,"moduleResolution":"Bundler","target":"ESNext","lib":["ES2023","DOM"],"skipLibCheck":true,"esModuleInterop":true,"module":"ESNext","noEmit":true},"include":["./**/*"],"exclude":["./_generated"]}
