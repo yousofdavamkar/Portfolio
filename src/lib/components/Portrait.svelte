@@ -1,7 +1,7 @@
 <script lang="ts">let {compact=false}=$props();</script>
 <div class:compact class="portrait-scene">
  <div class="arch arch-outer"></div><div class="arch arch-middle"></div><div class="arch arch-white"></div>
- <img class="portrait" src="/images/portrait.png" alt="Portrait from Yosef’s original portfolio design" width="850" height="585" loading={compact ? "lazy" : "eager"} fetchpriority={compact ? "auto" : "high"} decoding="async" />
+ <img class="portrait" src="/images/portrait.png" alt="Portrait from Yousof’s original portfolio design" width="850" height="585" loading={compact ? "lazy" : "eager"} fetchpriority={compact ? "auto" : "high"} decoding="async" />
  <span class="orb orb-one"></span><span class="orb orb-two"></span><span class="orb orb-three"></span>
 </div>
 <style>

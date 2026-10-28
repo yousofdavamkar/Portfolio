@@ -46,7 +46,7 @@ export const saveProject = mutation({ args: { id: v.optional(v.id('projects')), 
 }});
 export const uploadUrl = mutation({args:{},returns:v.string(),handler:async ctx=>{await requireAdmin(ctx);return await ctx.storage.generateUploadUrl();}});
 export const seed = internalMutation({args:{},returns:v.null(),handler:async ctx=>{
-  if(!await ctx.db.query('profiles').withIndex('by_key',q=>q.eq('key','main')).unique()) await ctx.db.insert('profiles',{key:'main',name:'Yosef Davamkar',role:'Fullstack web developer',bio:'I share content about UI/UX design and my experiences from work.',journey:'Designing interfaces. Building experiences. Always learning.',experience:'3+',email:'',github:'https://github.com/yousofdavamkar',linkedin:'',skills:['SvelteKit','TypeScript','UI/UX design','Convex'],available:true});
+  if(!await ctx.db.query('profiles').withIndex('by_key',q=>q.eq('key','main')).unique()) await ctx.db.insert('profiles',{key:'main',name:'Yousof Davamkar',role:'Fullstack web developer',bio:'I share content about UI/UX design and my experiences from work.',journey:'Designing interfaces. Building experiences. Always learning.',experience:'3+',email:'',github:'https://github.com/yousofdavamkar',linkedin:'',skills:['SvelteKit','TypeScript','UI/UX design','Convex'],available:true});
   if(!await ctx.db.query('projects').withIndex('by_order').first()) await ctx.db.insert('projects',{title:'Elecode IranZaminn',slug:'elecode-iranzaminn',summary:'A closer look at the web experience featured in my portfolio.',body:'This project is featured in the original portfolio design. More details will be added here.',category:'Web development',stack:[],image:'/images/featured-project.png',url:'',published:true,order:0});
   return null;
 }});

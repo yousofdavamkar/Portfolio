@@ -1,4 +1,4 @@
-# Yosef's portfolio
+# Yousof's portfolio
 
 A responsive SvelteKit portfolio and authenticated content studio, based on the portfolio Figma file inspected through Helium. Original portrait, project and contact artwork live in `static/images`.
 

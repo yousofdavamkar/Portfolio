@@ -16,7 +16,7 @@
  const project=$derived(projects[index]);
  function move(direction:number){preferences.setProjectIndex((index+direction+projects.length)%projects.length);}
 </script>
-<svelte:head><title>Portfolio — Yosef Davamkar</title><meta name="description" content="Selected projects in web development and interface design."/></svelte:head>
+<svelte:head><title>Portfolio — Yousof Davamkar</title><meta name="description" content="Selected projects in web development and interface design."/></svelte:head>
 <section class="work-page content-page">
  <h1 data-reveal class="speech section-label speech-tail">Portfolio <span aria-hidden="true">👨🏻‍💻</span></h1>
  {#if categories.length>2}<div class="work-filters" aria-label="Filter projects">{#each categories as option}<Button variant={category===option?'default':'outline'} onclick={()=>{category=option;preferences.setProjectIndex(0);}} aria-pressed={category===option}>{option}</Button>{/each}</div>{/if}

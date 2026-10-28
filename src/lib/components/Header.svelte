@@ -18,7 +18,7 @@
   <Sheet.Root bind:open>
    <Sheet.Trigger class="round-button mobile-menu" aria-label="Open navigation"><Menu size={23}/></Sheet.Trigger>
    <Sheet.Content side="left" class="mobile-sheet">
-    <Sheet.Header><Sheet.Title>Yosef Davamkar<span class="accent-text">.</span></Sheet.Title><Sheet.Description>Fullstack web developer</Sheet.Description></Sheet.Header>
+    <Sheet.Header><Sheet.Title>Yousof Davamkar<span class="accent-text">.</span></Sheet.Title><Sheet.Description>Fullstack web developer</Sheet.Description></Sheet.Header>
     <nav aria-label="Mobile navigation">{#each links as link}<a href={link.href} onclick={()=>open=false} aria-current={page.url.pathname===link.href?'page':undefined}>{link.label}<ArrowUpRight size={21}/></a>{/each}</nav>
     <p class="sheet-note">Thoughtful design.<br/>Considered code.</p>
    </Sheet.Content>
