@@ -14,6 +14,7 @@ test('each About topic is its own deep-linkable page with a working Back link', 
 }) => {
 	const errors: string[] = [];
 	page.on('pageerror', (error) => errors.push(error.message));
+	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.goto('/about', { waitUntil: 'networkidle' });
 	await expect(page.locator('[data-slot="accordion-trigger"]')).toHaveCount(0);
 	await expect(
@@ -43,6 +44,7 @@ test('mobile About matches the portrait-free navigation and all details fit narr
 	page
 }) => {
 	await page.setViewportSize({ width: 320, height: 700 });
+	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.goto('/about', { waitUntil: 'networkidle' });
 	await expect(page.locator('.about-portrait')).toBeHidden();
 	for (const [, slug] of topics) {

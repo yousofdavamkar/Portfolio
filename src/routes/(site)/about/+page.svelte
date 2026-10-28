@@ -1,36 +1,99 @@
 <script lang="ts">
 import { ArrowDown } from '@lucide/svelte';
-import { getContext } from 'svelte';
+import { getContext, onMount } from 'svelte';
 import { aboutSections } from '#lib/about.js';
 import Portrait from '#lib/components/Portrait.svelte';
 import TransitionOrnament from '#lib/components/TransitionOrnament.svelte';
+import TypedText from '#lib/components/TypedText.svelte';
 import { Button } from '#lib/components/ui/button/index.js';
 import { PORTFOLIO, type PortfolioContext } from '#lib/state/portfolio.svelte.js';
 
 const portfolio = getContext<PortfolioContext>(PORTFOLIO);
 const profile = $derived(portfolio.content.profile);
+const label = 'About me';
+const question = 'What do you want to know about me?';
+let labelLetters = $state(0);
+let questionLetters = $state(0);
+let questionStarted = $state(false);
+let visibleTopics = $state(0);
+let introComplete = $state(false);
+
+onMount(() => {
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+	const started = performance.now();
+	const labelStart = 200;
+	const questionStart = labelStart + label.length * 55 + 180;
+	const topicsStart = questionStart + question.length * 30 + 180;
+	let frame = 0;
+	const finish = () => {
+		cancelAnimationFrame(frame);
+		introComplete = true;
+	};
+	const tick = (now: number) => {
+		const elapsed = now - started;
+		labelLetters = Math.min(label.length, Math.max(0, Math.floor((elapsed - labelStart) / 55)));
+		questionStarted = elapsed >= questionStart;
+		questionLetters = Math.min(
+			question.length,
+			Math.max(0, Math.floor((elapsed - questionStart) / 30))
+		);
+		visibleTopics =
+			elapsed < topicsStart
+				? 0
+				: Math.min(aboutSections.length, 1 + Math.floor((elapsed - topicsStart) / 110));
+		if (elapsed >= topicsStart + (aboutSections.length - 1) * 110 + 280) finish();
+		else frame = requestAnimationFrame(tick);
+	};
+	const preference = () => {
+		if (reducedMotion.matches) finish();
+	};
+	const visibility = () => {
+		if (document.hidden) finish();
+	};
+	if (reducedMotion.matches || document.documentElement.dataset['input'] === 'keyboard') finish();
+	else frame = requestAnimationFrame(tick);
+	window.addEventListener('keydown', finish);
+	document.addEventListener('visibilitychange', visibility);
+	reducedMotion.addEventListener('change', preference);
+	return () => {
+		cancelAnimationFrame(frame);
+		window.removeEventListener('keydown', finish);
+		document.removeEventListener('visibilitychange', visibility);
+		reducedMotion.removeEventListener('change', preference);
+	};
+});
 </script>
 
 <svelte:head>
 	<title>About me — {profile?.name}</title>
 	<meta name="description" content={profile?.bio}>
 </svelte:head>
-<section class="about-page">
-	<h1 data-reveal class="speech about-label speech-tail">
-		About me <span aria-hidden="true">😎</span>
+<section class="about-page" class:intro-complete={introComplete}>
+	<h1 class="speech about-label speech-tail">
+		<TypedText text={label} visible={introComplete ? Infinity : labelLetters} />
+		<span
+			class="about-emoji"
+			class:emoji-visible={introComplete || labelLetters === label.length}
+			aria-hidden="true"
+			>😎</span
+		>
 	</h1>
 	<div class="about-portrait"><Portrait home about /></div>
 	<div class="about-choices">
-		<h2 data-reveal class="speech about-question">What do you want to know about me?</h2>
+		<h2 class="speech about-question" class:question-visible={introComplete || questionStarted}>
+			<TypedText text={question} visible={introComplete ? Infinity : questionLetters} />
+		</h2>
 		<nav aria-label="About me topics">
-			{#each aboutSections as section (section.slug)}
-				<Button href={`/about/${section.slug}`} variant="outline" class="about-topic" data-reveal>
-					<span class="desktop-label">{section.label}</span>
-					<span class="mobile-label">{section.mobile}</span>
-					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-						<path d="M1 12h22M16 5l7 7-7 7" />
-					</svg>
-				</Button>
+			{#each aboutSections as section, index (section.slug)}
+				<div class="topic-reveal" class:topic-visible={introComplete || index < visibleTopics}>
+					<Button href={`/about/${section.slug}`} variant="outline" class="about-topic">
+						<span class="desktop-label">{section.label}</span>
+						<span class="mobile-label">{section.mobile}</span>
+						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path d="M1 12h22M16 5l7 7-7 7" />
+						</svg>
+					</Button>
+				</div>
 			{/each}
 		</nav>
 	</div>
@@ -65,11 +128,47 @@ const profile = $derived(portfolio.content.profile);
 	border-radius: 3.472222cqw;
 	z-index: 2;
 }
-.about-label span {
+.about-emoji {
 	margin-left: 0.347222cqw;
 	font-size: 2.222222cqw;
 	line-height: 1;
 	vertical-align: middle;
+	visibility: hidden;
+}
+.about-emoji.emoji-visible {
+	visibility: visible;
+}
+.about-question {
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 160ms ease;
+}
+.about-question.question-visible {
+	opacity: 1;
+	visibility: visible;
+}
+.topic-reveal {
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(12px);
+	transition:
+		opacity 280ms var(--ease-out),
+		transform 280ms var(--ease-out);
+}
+.topic-reveal.topic-visible {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+	.about-question,
+	.topic-reveal,
+	.about-emoji {
+		opacity: 1;
+		visibility: visible;
+		transform: none;
+		transition: none;
+	}
 }
 .about-portrait {
 	position: absolute;
@@ -166,7 +265,7 @@ const profile = $derived(portfolio.content.profile);
 		border-radius: 50px;
 		margin: 0 0 26px;
 	}
-	.about-label span {
+	.about-emoji {
 		margin-left: 4px;
 		font-size: 16px;
 	}
