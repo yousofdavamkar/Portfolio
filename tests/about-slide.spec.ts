@@ -37,7 +37,7 @@ async function inspectSlide(page: Page, path: string, direction: 1 | -1) {
 			for (const animation of element.getAnimations()) animation.play();
 		}
 	});
-	await expect(page.locator('[data-page-slide-layer]')).toHaveCount(0);
+	await expect(page.locator('[data-page-slide-layer], [data-shared-art-layer]')).toHaveCount(0);
 	await expect(page.locator('#main')).toHaveCSS('transform', 'none');
 	await expect(page.locator('#main')).toHaveCSS('opacity', '1');
 }
@@ -71,7 +71,71 @@ test('a new navigation interrupts the slideshow without leaving snapshots or hid
 		.getByRole('link', { name: 'Contact me' })
 		.click();
 	await expect(page).toHaveURL(/\/contact$/);
-	await expect(page.locator('[data-page-slide-layer]')).toHaveCount(0);
+	await expect(page.locator('[data-page-slide-layer], [data-shared-art-layer]')).toHaveCount(0);
 	await expect(page.locator('#main')).toHaveCSS('transform', 'none');
 	await expect(page.locator('#main')).toHaveCSS('opacity', '1');
 });
+
+for (const width of [1440, 390]) {
+	test(`the About arch travels to a topic and back without duplicate artwork at ${width}px`, async ({
+		page
+	}) => {
+		await page.setViewportSize({ width, height: 900 });
+		await page.goto('/about', { waitUntil: 'networkidle' });
+		for (const destination of ['/about/journey', '/about']) {
+			if (destination === '/about')
+				await page.getByRole('link', { name: 'Back', exact: true }).click();
+			else await page.locator('.about-topic[href="/about/journey"]').click();
+			await expect(page).toHaveURL(new RegExp(`${destination}$`));
+			await expect(page.locator('[data-art-ghost]')).toHaveCount(1);
+			await expect(page.locator('[data-art-page]')).toHaveCount(0);
+			await expect(page.locator('#main [data-shared-art="ornament"]')).toHaveCSS(
+				'visibility',
+				'hidden'
+			);
+			await page.waitForFunction(() =>
+				document
+					.querySelector('[data-art-ghost="ornament"]')
+					?.getAnimations()
+					.some((animation) => Number(animation.currentTime) > 550)
+			);
+			// The content slide finishes first; the arch settles independently at its final location.
+			await expect(page.locator('[data-page-slide-layer]')).toHaveCount(0);
+			const landing = await page.evaluate(() => {
+				const ghost = document.querySelector('[data-art-ghost="ornament"]');
+				const target = document.querySelector('#main [data-shared-art="ornament"]');
+				if (!ghost || !target) throw new Error('Missing shared arch');
+				for (const animation of ghost.getAnimations({ subtree: true })) {
+					animation.pause();
+					animation.currentTime = Number(animation.effect?.getComputedTiming().endTime) - 0.01;
+				}
+				const actual = ghost.getBoundingClientRect();
+				const expected = target.getBoundingClientRect();
+				return {
+					width: expected.width,
+					height: expected.height,
+					error: Math.max(
+						Math.abs(actual.x - expected.x),
+						Math.abs(actual.y - expected.y),
+						Math.abs(actual.width - expected.width),
+						Math.abs(actual.height - expected.height)
+					)
+				};
+			});
+			expect(landing.width).toBeGreaterThan(0);
+			expect(landing.height).toBeGreaterThan(0);
+			expect(landing.error).toBeLessThan(1);
+			await page.evaluate(() => {
+				for (const animation of document
+					.querySelector('[data-art-ghost="ornament"]')
+					?.getAnimations({ subtree: true }) ?? [])
+					animation.play();
+			});
+			await expect(page.locator('[data-shared-art-layer]')).toHaveCount(0);
+			await expect(page.locator('#main [data-shared-art="ornament"]')).toHaveCSS(
+				'visibility',
+				'visible'
+			);
+		}
+	});
+}

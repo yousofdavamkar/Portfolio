@@ -57,10 +57,13 @@ onNavigate((navigation) => {
 	const main = document.querySelector<HTMLElement>('#main');
 	if (!main || fromChapter < 0 || toChapter < 0 || !motionAllowed()) return;
 
+	const aboutSlide = fromChapter === 1 && toChapter === 1;
 	const shared =
 		(from === '/' && to === '/about') || (from === '/about' && to === '/')
 			? captureSharedArt(main)
-			: undefined;
+			: aboutSlide
+				? captureSharedArt(main, { artwork: 'ornament', backdrop: false })
+				: undefined;
 	const slideDirection =
 		navigation.type === 'popstate' && navigation.delta
 			? navigation.delta < 0
@@ -69,8 +72,7 @@ onNavigate((navigation) => {
 			: to === '/about'
 				? 1
 				: -1;
-	const slide =
-		fromChapter === 1 && toChapter === 1 ? capturePageSlide(main, slideDirection) : undefined;
+	const slide = aboutSlide ? capturePageSlide(main, slideDirection) : undefined;
 	const current = generation;
 	const direction =
 		navigation.type === 'popstate' && navigation.delta
@@ -132,7 +134,7 @@ onNavigate((navigation) => {
 						},
 						{
 							duration: slide ? pageSlideDuration : shared ? 0.46 : 0.32,
-							ease: shared ? 'easeInOut' : easeOut
+							ease: shared && !slide ? 'easeInOut' : easeOut
 						}
 					);
 					cancelPlayback = () => {

@@ -89,7 +89,7 @@ function skillMark(skill: string) {
 		{/if}
 	</div>
 	<div class="detail-arches" aria-hidden="true">
-		<TransitionOrnament class="large-arch" inverted shared={false} />
+		<TransitionOrnament class="large-arch" inverted />
 		<TransitionOrnament class="small-arch" inverted shared={false} />
 	</div>
 	<Button
@@ -326,13 +326,14 @@ function skillMark(skill: string) {
 		font-size: 16px;
 	}
 	.detail-arches :global(.large-arch) {
-		display: none;
-	}
-	.detail-arches :global(.small-arch) {
 		width: 39.252336cqw;
 		height: 49.065421cqw;
+		left: auto;
 		right: 0;
 		bottom: 0;
+	}
+	.detail-arches :global(.small-arch) {
+		display: none;
 	}
 	.about-detail :global(.section-next) {
 		display: none;
