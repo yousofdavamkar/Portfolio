@@ -82,6 +82,18 @@ onNavigate((navigation) => {
 				: -1;
 	const slide = aboutSlide ? capturePageSlide(main, slideDirection) : undefined;
 	const current = generation;
+	let preview: HTMLElement | null = null;
+	let previewOpacity = '';
+	let previewInert = false;
+	let previewAnimation: ReturnType<typeof animate> | undefined;
+	const restorePreview = () => {
+		previewAnimation?.cancel();
+		if (preview) {
+			preview.style.opacity = previewOpacity;
+			preview.inert = previewInert;
+		}
+		preview = null;
+	};
 	const direction =
 		navigation.type === 'popstate' && navigation.delta
 			? Math.sign(navigation.delta)
@@ -109,6 +121,7 @@ onNavigate((navigation) => {
 	cancelPlayback = () => {
 		outgoing?.cancel();
 		shared?.cancel();
+		restorePreview();
 		slide?.cancel();
 		restore();
 	};
@@ -125,6 +138,16 @@ onNavigate((navigation) => {
 				outgoing?.cancel();
 				restore();
 				shared?.hideDestination();
+				if (fromChapter === 1 && to === '/work') {
+					const candidate = main.querySelector<HTMLElement>('[data-after-ornament]');
+					if (candidate?.offsetWidth) {
+						preview = candidate;
+						previewOpacity = candidate.style.opacity;
+						previewInert = candidate.inert;
+						candidate.style.opacity = '0';
+						candidate.inert = true;
+					}
+				}
 				// Measure after SvelteKit has restored the new page's scroll position.
 				main.style.opacity = '0';
 				const frame = requestAnimationFrame(() => {
@@ -132,6 +155,17 @@ onNavigate((navigation) => {
 					restore();
 					const artworkFinished = shared?.play();
 					const slideFinished = slide?.play();
+					// Reveal the capsule only after the shared U actually lands, not on a timer.
+					const previewFinished = Promise.resolve(artworkFinished).then(async () => {
+						if (current !== generation || !preview) return;
+						previewAnimation = animate(
+							preview,
+							{ opacity: [0, 1] },
+							{ duration: 0.28, ease: easeOut }
+						);
+						await previewAnimation;
+						if (current === generation) restorePreview();
+					});
 					const incoming = animate(
 						main,
 						{
@@ -148,10 +182,16 @@ onNavigate((navigation) => {
 					cancelPlayback = () => {
 						incoming.cancel();
 						shared?.cancel();
+						restorePreview();
 						slide?.cancel();
 						restore();
 					};
-					void Promise.all([Promise.resolve(incoming), artworkFinished, slideFinished]).then(() => {
+					void Promise.all([
+						Promise.resolve(incoming),
+						artworkFinished,
+						slideFinished,
+						previewFinished
+					]).then(() => {
 						if (current !== generation) return;
 						cancelPlayback();
 						cancelPlayback = () => {};
@@ -162,6 +202,7 @@ onNavigate((navigation) => {
 				cancelPlayback = () => {
 					cancelAnimationFrame(frame);
 					shared?.cancel();
+					restorePreview();
 					slide?.cancel();
 					restore();
 				};

@@ -61,6 +61,13 @@ for (const from of ['/about', '/about/languages']) {
 					);
 				});
 				expect(landing).toBeLessThan(1);
+				if (destination === '/work' && width >= 1024) {
+					await expect(page.locator('.project-preview')).toHaveCSS('opacity', '0');
+					await expect(page.locator('.project-preview')).toHaveAttribute('inert', '');
+					// Even when the U is held past its usual duration, the image waits for completion.
+					await page.waitForTimeout(1100);
+					await expect(page.locator('.project-preview')).toHaveCSS('opacity', '0');
+				}
 				await page.evaluate(() => {
 					for (const animation of document
 						.querySelector('[data-art-ghost="ornament"]')
@@ -68,7 +75,13 @@ for (const from of ['/about', '/about/languages']) {
 						animation.play();
 				});
 				await settled(page);
-				if (destination === '/work') await page.goBack();
+				if (destination === '/work') {
+					if (width >= 1024) {
+						await expect(page.locator('.project-preview')).toHaveCSS('opacity', '1');
+						await expect(page.locator('.project-preview')).not.toHaveAttribute('inert');
+					}
+					await page.goBack();
+				}
 			}
 			expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
 				true
@@ -85,6 +98,8 @@ for (const from of ['/about', '/about/languages']) {
 		await expect(page.locator('[data-art-ghost="ornament"]')).toHaveCount(1);
 		await page.keyboard.press('Escape');
 		await settled(page);
+		await expect(page.locator('.project-preview')).toHaveCSS('opacity', '1');
+		await expect(page.locator('.project-preview')).not.toHaveAttribute('inert');
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.goBack();
 		await openPortfolio(page, false);

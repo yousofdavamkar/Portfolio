@@ -184,6 +184,7 @@ function move(step: number) {
 		{#if previewProject}
 			<a
 				class="project-preview"
+				data-after-ornament
 				onclick={() => projectNavigation.setProjectIndex((index + 1) % projects.length)}
 				href={`/work/${previewProject.slug}`}
 				aria-label={`Preview ${previewProject.title}`}
