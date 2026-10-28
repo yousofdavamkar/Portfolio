@@ -2,7 +2,7 @@
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight } from '@lucide/svelte';
 import { getContext } from 'svelte';
 import MediaImage from '#lib/components/MediaImage.svelte';
-import Ornament from '#lib/components/Ornament.svelte';
+import TransitionOrnament from '#lib/components/TransitionOrnament.svelte';
 import { Badge } from '#lib/components/ui/badge/index.js';
 import { Button } from '#lib/components/ui/button/index.js';
 import { PORTFOLIO, type PortfolioContext } from '#lib/state/portfolio.svelte.js';
@@ -111,7 +111,7 @@ function move(direction: number) {
 			<Button href="/contact" class="pill-action">Let’s talk <ArrowRight /></Button>
 		</div>
 	{/if}
-	<Ornament class="work-ornament" />
+	<TransitionOrnament class="work-ornament" />
 	<Button href="/contact" variant="outline" size="icon" class="section-next" aria-label="Contact me"
 		><ArrowDown /></Button
 	>
