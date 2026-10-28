@@ -2,6 +2,7 @@
 import { ArrowDown } from '@lucide/svelte';
 import { getContext, onMount } from 'svelte';
 import Portrait from '#lib/components/Portrait.svelte';
+import TypedText from '#lib/components/TypedText.svelte';
 import { Button } from '#lib/components/ui/button/index.js';
 import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 import { PORTFOLIO, type PortfolioContext } from '#lib/state/portfolio.svelte.js';
@@ -11,6 +12,90 @@ const portfolio = getContext<PortfolioContext>(PORTFOLIO);
 const profile = $derived(portfolio.content.profile);
 let resume = $state<string | null>(null);
 let resumePending = $state(false);
+const greeting = 'Hey! ';
+const greetingEmoji = '👋 ☺️';
+const introduction = $derived(
+	`I’m ${profile?.name ?? 'Yousof Davamkar'}, a ${profile?.role ?? 'Fullstack web developer'}!`
+);
+const finalLead = $derived(resume ? 'Download my CV from link below' : 'Have something in mind?');
+const finalLink = $derived(resume ? '(Download CV)' : 'Let’s build it together');
+const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+const length = (text: string) => Array.from(segmenter.segment(text)).length;
+let introStage = $state(-1);
+let letterCount = $state(0);
+let introComplete = $state(false);
+function visibleLetters(stage: number, offset = 0) {
+	if (introComplete || introStage > stage) return Number.POSITIVE_INFINITY;
+	return introStage === stage ? Math.max(0, letterCount - offset) : 0;
+}
+
+onMount(() => {
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+	let frame = 0;
+	let started = performance.now();
+	let waitingForResume = false;
+	const finish = () => {
+		cancelAnimationFrame(frame);
+		introComplete = true;
+	};
+	const tick = (now: number) => {
+		if (introStage < 0) {
+			if (now - started < 550) {
+				frame = requestAnimationFrame(tick);
+				return;
+			}
+			introStage = 0;
+			started = now;
+		}
+		// Keep the typing indicator alive while the last message resolves.
+		if (introStage === 2 && resumePending && now - started < 2500) {
+			waitingForResume = true;
+			frame = requestAnimationFrame(tick);
+			return;
+		}
+		if (waitingForResume) {
+			waitingForResume = false;
+			resumePending = false;
+			started = now;
+		}
+		const total =
+			introStage === 0
+				? length(greeting + greetingEmoji)
+				: introStage === 1
+					? length(introduction)
+					: length(finalLead + finalLink);
+		const interval = introStage === 0 ? 65 : 25;
+		letterCount = Math.min(total, Math.floor((now - started) / interval));
+		if (now - started >= total * interval + (introStage === 2 ? 400 : 280)) {
+			if (introStage === 2) {
+				finish();
+				return;
+			}
+			introStage++;
+			letterCount = 0;
+			started = now;
+		}
+		frame = requestAnimationFrame(tick);
+	};
+	const preference = () => {
+		if (reducedMotion.matches) finish();
+	};
+	const visibility = () => {
+		if (document.hidden) finish();
+	};
+	if (reducedMotion.matches || document.documentElement.dataset['input'] === 'keyboard') finish();
+	else frame = requestAnimationFrame(tick);
+	window.addEventListener('keydown', finish);
+	document.addEventListener('visibilitychange', visibility);
+	reducedMotion.addEventListener('change', preference);
+	return () => {
+		cancelAnimationFrame(frame);
+		window.removeEventListener('keydown', finish);
+		document.removeEventListener('visibilitychange', visibility);
+		reducedMotion.removeEventListener('change', preference);
+	};
+});
+
 onMount(() => {
 	resumePending = true;
 	const unsub = resumeStore.subscribe([], (entry) => {
@@ -63,28 +148,39 @@ onMount(() => {
 			{/each}
 		</div>
 	</div>
-	<div class="hero-intro">
-		<div data-reveal class="intro-label">
-			<span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span
-			><span>Yousof is typing…</span>
+	<div class="hero-intro" class:intro-complete={introComplete}>
+		<div class="intro-label" class:typing-finished={introComplete} aria-hidden={introComplete}>
+			<span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+			<span>Yousof is typing…</span>
 		</div>
-		<p data-reveal class="speech greeting">Hey! <span aria-hidden="true">👋 ☺️</span></p>
-		<h1 data-reveal class="speech intro-title">
-			I’m {profile?.name ?? 'Yousof Davamkar'}, a
-			<span>{profile?.role ?? 'Fullstack web developer'}!</span>
+		<p class="speech greeting" class:message-visible={introStage >= 0 || introComplete}>
+			<TypedText text={greeting} visible={visibleLetters(0)} />
+			<span class="greeting-emoji" aria-hidden="true"
+				><TypedText text={greetingEmoji} visible={visibleLetters(0, length(greeting))} /></span
+			>
+		</p>
+		<h1 class="speech intro-title" class:message-visible={introStage >= 1 || introComplete}>
+			<TypedText text={introduction} visible={visibleLetters(1)} />
 		</h1>
-		<div data-reveal class="speech speech-tail resume-bubble">
+		<div
+			class="speech speech-tail resume-bubble"
+			class:message-visible={introStage >= 2 || introComplete}
+		>
 			{#if resumePending}
 				<div class="resume-loading" role="status" aria-label="Loading resume">
-					<Skeleton class="h-5 w-44 bg-neutral-200" aria-hidden="true" />
-					<Skeleton class="mt-3 h-5 w-52 max-w-full bg-neutral-200" aria-hidden="true" />
+					<Skeleton class="h-4 w-44 bg-neutral-200" aria-hidden="true" />
+					<Skeleton class="mt-2 h-4 w-52 max-w-full bg-neutral-200" aria-hidden="true" />
 				</div>
-			{:else if resume}
-				<p>Download my CV from link below</p>
-				<a href={resume} target="_blank" rel="noreferrer" class="text-link">(Download CV)</a>
 			{:else}
-				<p>Have something in mind?</p>
-				<a href="/contact" class="text-link">Let’s build it together</a>
+				<p><TypedText text={finalLead} visible={visibleLetters(2)} /></p>
+				<a
+					href={resume ?? '/contact'}
+					target={resume ? '_blank' : undefined}
+					rel={resume ? 'noreferrer' : undefined}
+					class="text-link"
+				>
+					<TypedText text={finalLink} visible={visibleLetters(2, length(finalLead))} />
+				</a>
 			{/if}
 		</div>
 	</div>
@@ -139,7 +235,7 @@ onMount(() => {
 	white-space: nowrap;
 	padding-block: 1.180556cqw;
 }
-.greeting span {
+.greeting-emoji {
 	font-size: 2.222222cqw;
 	line-height: 1;
 	vertical-align: middle;
@@ -149,6 +245,10 @@ onMount(() => {
 	width: 100%;
 }
 .intro-label {
+	transition:
+		opacity 220ms ease,
+		transform 220ms var(--ease-out),
+		visibility 0s;
 	display: flex;
 	flex-direction: column;
 	gap: 0.694444cqw;
@@ -172,8 +272,67 @@ onMount(() => {
 	border-radius: 50%;
 	background: #b8b8b8;
 }
+.typing-dots i {
+	animation: typing-dot 900ms ease-in-out infinite;
+}
 .typing-dots i:nth-child(2) {
+	animation-delay: 150ms;
 	background: #d1d1d1;
+}
+.typing-dots i:nth-child(3) {
+	animation-delay: 300ms;
+}
+.typing-finished {
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-6px);
+	transition-delay: 0s, 0s, 220ms;
+}
+.typing-finished .typing-dots i {
+	animation: none;
+}
+.hero-intro .speech {
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(8px);
+	transition:
+		opacity 180ms ease,
+		transform 220ms var(--ease-out);
+}
+.hero-intro .speech.message-visible {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+}
+@keyframes typing-dot {
+	0%,
+	60%,
+	100% {
+		transform: translateY(0);
+		opacity: 0.45;
+	}
+	30% {
+		transform: translateY(-3px);
+		opacity: 1;
+	}
+}
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+	.hero-intro .speech {
+		opacity: 1;
+		visibility: visible;
+		transform: none;
+		transition: none;
+	}
+	.intro-label {
+		visibility: hidden;
+	}
+	.typing-dots i {
+		animation: none;
+	}
+}
+.resume-loading {
+	height: 2.833333em;
+	min-height: 0;
 }
 .resume-bubble .text-link {
 	color: #a18aff;
@@ -247,7 +406,10 @@ onMount(() => {
 		border-radius: 20px;
 		font-weight: 400;
 	}
-	.greeting span {
+	.resume-loading {
+		height: 44px;
+	}
+	.greeting-emoji {
 		font-size: 16px;
 	}
 	.hero-intro .greeting {
