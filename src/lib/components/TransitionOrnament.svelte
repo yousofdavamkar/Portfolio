@@ -1,10 +1,14 @@
 <script lang="ts">
-let { class: className = '', inverted = false }: { class?: string; inverted?: boolean } = $props();
+let {
+	class: className = '',
+	inverted = false,
+	shared = true
+}: { class?: string; inverted?: boolean; shared?: boolean } = $props();
 </script>
 
 <svg
 	class={`transition-ornament ${className}`}
-	data-shared-art="ornament"
+	data-shared-art={shared ? 'ornament' : undefined}
 	data-art-angle={inverted ? 180 : 0}
 	aria-hidden="true"
 	viewBox="0 0 300 375"

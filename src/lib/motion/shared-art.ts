@@ -100,6 +100,10 @@ export function captureSharedArt(main: HTMLElement) {
 					continue;
 				}
 				const end = target.getBoundingClientRect();
+				if (!end.width || !end.height) {
+					animations.push(animate(item.wrapper, { opacity: 0 }, { duration: 0.3 }));
+					continue;
+				}
 				const angle = Number(target.dataset['artAngle'] ?? 0);
 				const scaleX = end.width / item.rect.width;
 				const scaleY = end.height / item.rect.height;
@@ -127,6 +131,14 @@ export function captureSharedArt(main: HTMLElement) {
 						{ duration: travelDuration, ease: travelEase }
 					)
 				);
+				if (ornament)
+					animations.push(
+						animate(
+							item.image,
+							{ stroke: getComputedStyle(target).stroke },
+							{ duration: travelDuration, ease: travelEase }
+						)
+					);
 				if (!ornament)
 					animations.push(
 						animate(

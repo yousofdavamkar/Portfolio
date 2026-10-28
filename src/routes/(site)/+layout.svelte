@@ -54,7 +54,7 @@ onMount(() => {
 </script>
 <a class="skip-link" href="#main">Skip to content</a>
 <div class="site-shell">
-	{#if page.url.pathname !== '/'}
+	{#if page.url.pathname !== '/' && !page.url.pathname.startsWith('/about')}
 		<SceneGraphics />
 	{/if}
 	<Header />

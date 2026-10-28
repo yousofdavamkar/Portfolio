@@ -1,7 +1,11 @@
 <script lang="ts">
-let { compact = false, home = false }: { compact?: boolean; home?: boolean } = $props();
+let {
+	compact = false,
+	home = false,
+	about = false
+}: { compact?: boolean; home?: boolean; about?: boolean } = $props();
 </script>
-<div class:compact class:home class="portrait-scene">
+<div class:compact class:home class:about class="portrait-scene">
 	<div class="arch arch-outer"></div>
 	<div class="arch arch-middle"></div>
 	<div class="arch arch-white"></div>
@@ -133,6 +137,10 @@ let { compact = false, home = false }: { compact?: boolean; home?: boolean } = $
 		width: 32px;
 		height: 32px;
 	}
+}
+.about .arch-outer,
+.about .arch-middle {
+	display: none;
 }
 /* Home uses the exported Figma asset at its native 850 × 585 proportions. */
 .home {

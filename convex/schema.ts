@@ -29,6 +29,10 @@ export const profileFields = {
 	github: v.string(),
 	linkedin: v.string(),
 	skills: v.array(v.string()),
+	activities: v.optional(v.array(v.string())),
+	softSkills: v.optional(v.array(v.string())),
+	education: v.optional(v.array(v.string())),
+	languages: v.optional(v.array(v.string())),
 	available: v.boolean(),
 	resumeId: v.optional(v.id('_storage'))
 };

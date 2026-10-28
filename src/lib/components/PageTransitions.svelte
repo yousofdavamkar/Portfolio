@@ -13,7 +13,11 @@ let cancelPlayback = () => {};
 let releaseNavigation = () => {};
 
 const chapterIndex = (path: string) =>
-	path.startsWith('/work/') ? 2 : ['/', '/about', '/work', '/contact'].indexOf(path);
+	path.startsWith('/about/')
+		? 1
+		: path.startsWith('/work/')
+			? 2
+			: ['/', '/about', '/work', '/contact'].indexOf(path);
 
 function setupScene(entrance: boolean) {
 	cleanupScene();

@@ -337,6 +337,28 @@ const uploadEnhanced: SubmitFunction = () => {
 						/>
 						<p class="field-help">Separate each skill with a comma.</p>
 					</div>
+					{#each [
+						{ key: 'activities', label: 'Activities' },
+						{ key: 'softSkills', label: 'Soft skills' },
+						{ key: 'education', label: 'Education & training' },
+						{ key: 'languages', label: 'Spoken languages' }
+					] as const as field (field.key)}
+						<div class="field">
+							<label for={`profile-${field.key}`}>{field.label}</label>
+							<Textarea
+								id={`profile-${field.key}`}
+								name={field.key}
+								value={data.profile?.[field.key]?.join('\n\n') ?? ''}
+								rows={5}
+								maxlength={20000}
+								aria-describedby={`help-${field.key}`}
+							/>
+							<p class="field-help" id={`help-${field.key}`}>
+								Separate entries with a blank line. Put the title first, details on the next line,
+								and dates on the third line. Up to 40 entries, 500 characters each.
+							</p>
+						</div>
+					{/each}
 					<input type="hidden" name="resumeId" value={resumeId}>
 					<label class="check-field"
 						><input type="checkbox" name="available" checked={data.profile?.available}>

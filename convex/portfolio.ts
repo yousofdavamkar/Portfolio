@@ -86,6 +86,10 @@ export const saveProfile = mutation({
 		bounded(args.journey, 6000, 'Journey');
 		if (args.skills.length > 40 || args.skills.some((s) => s.length > 50))
 			throw new Error('Use up to 40 short skills.');
+		for (const entries of [args.activities, args.softSkills, args.education, args.languages]) {
+			if (entries && (entries.length > 40 || entries.some((entry) => entry.length > 500)))
+				throw new Error('Use up to 40 entries of 500 characters per About section.');
+		}
 		safeUrl(args.github);
 		safeUrl(args.linkedin);
 		const row = await ctx.db

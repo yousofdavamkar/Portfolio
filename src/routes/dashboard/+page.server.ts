@@ -9,6 +9,11 @@ const list = (form: FormData, key: string) =>
 		.split(',')
 		.map((s) => s.trim())
 		.filter(Boolean);
+const entries = (form: FormData, key: string) =>
+	text(form, key)
+		.split(/\r?\n\s*\r?\n/)
+		.map((entry) => entry.trim())
+		.filter(Boolean);
 export const load = async (event: Parameters<PageServerLoad>[0]) => {
 	const { client, viewer } = await adminClient(event);
 	const [content, inbox] = await Promise.all([
@@ -35,6 +40,10 @@ export const actions = {
 				github: text(form, 'github'),
 				linkedin: text(form, 'linkedin'),
 				skills: list(form, 'skills'),
+				activities: entries(form, 'activities'),
+				softSkills: entries(form, 'softSkills'),
+				education: entries(form, 'education'),
+				languages: entries(form, 'languages'),
 				available: form.has('available'),
 				...(text(form, 'resumeId') ? { resumeId: text(form, 'resumeId') as Id<'_storage'> } : {})
 			});
