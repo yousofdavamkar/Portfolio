@@ -22,7 +22,12 @@ async function settled(page: Page, path: string) {
 			}))
 		)
 		.toEqual({ opacity: '1', transform: 'none', busy: false });
-	await expect(page.locator('.journey-graphics, .navigation-loading')).toHaveCount(0);
+	await expect(
+		page.locator('.journey-graphics, .navigation-loading, [data-shared-art-layer]')
+	).toHaveCount(0);
+	for (const artwork of await page.locator('[data-shared-art]').all()) {
+		await expect(artwork).toHaveCSS('visibility', 'visible');
+	}
 }
 
 test('next-page links and history restore readable, interactive pages', async ({ page }) => {
@@ -122,4 +127,52 @@ test('slow loading keeps the header usable and a newer destination wins', async 
 	expect(clickable).toBe(true);
 	await clickNavigation(page, 'About me');
 	await settled(page, '/about');
+});
+
+test('Home and About carry the portrait and ornament across the route in both directions', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 1440, height: 810 });
+	await page.goto('/', { waitUntil: 'networkidle' });
+	for (const [name, path] of [
+		['About me', '/about'],
+		['Home', '/']
+	] as const) {
+		await clickNavigation(page, name);
+		await expect(page.locator('[data-art-ghost]')).toHaveCount(2);
+		await expect(page.locator('[data-shared-art-layer]')).toHaveCSS('pointer-events', 'none');
+		await expect(page).toHaveURL(new RegExp(`${path}$`));
+		await page.waitForFunction(() => {
+			const ghost = document.querySelector('[data-art-ghost="ornament"]');
+			return ghost?.getAnimations().some((animation) => Number(animation.currentTime) > 200);
+		});
+		const landingErrors = await page.evaluate(() => {
+			const ghosts = [...document.querySelectorAll<HTMLElement>('[data-art-ghost]')];
+			for (const ghost of ghosts) {
+				for (const animation of ghost.getAnimations({ subtree: true })) {
+					animation.pause();
+					animation.currentTime = Number(animation.effect?.getComputedTiming().endTime) - 0.01;
+				}
+			}
+			return ghosts.map((ghost) => {
+				const target = document.querySelector(`[data-shared-art="${ghost.dataset['artGhost']}"]`);
+				if (!target) throw new Error('Missing landing artwork');
+				const actual = ghost.getBoundingClientRect();
+				const expected = target.getBoundingClientRect();
+				return Math.max(
+					Math.abs(actual.x - expected.x),
+					Math.abs(actual.y - expected.y),
+					Math.abs(actual.width - expected.width),
+					Math.abs(actual.height - expected.height)
+				);
+			});
+		});
+		for (const error of landingErrors) expect(error).toBeLessThan(1);
+		await page.evaluate(() => {
+			for (const ghost of document.querySelectorAll('[data-art-ghost]')) {
+				for (const animation of ghost.getAnimations({ subtree: true })) animation.play();
+			}
+		});
+		await settled(page, path);
+	}
 });

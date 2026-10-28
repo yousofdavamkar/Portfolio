@@ -7,6 +7,7 @@ let { compact = false, home = false }: { compact?: boolean; home?: boolean } = $
 	<div class="arch arch-white"></div>
 	<img
 		class="portrait"
+		data-shared-art="portrait"
 		src="/images/portrait.png"
 		alt="Portrait from Yousof’s original portfolio design"
 		width="850"

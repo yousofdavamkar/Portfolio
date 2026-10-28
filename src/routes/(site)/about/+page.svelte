@@ -1,8 +1,8 @@
 <script lang="ts">
 import { ArrowDown, ArrowRight, Code2, Heart, Layers, Route } from '@lucide/svelte';
 import { getContext } from 'svelte';
-import Ornament from '#lib/components/Ornament.svelte';
 import Portrait from '#lib/components/Portrait.svelte';
+import TransitionOrnament from '#lib/components/TransitionOrnament.svelte';
 import * as Accordion from '#lib/components/ui/accordion/index.js';
 import { Badge } from '#lib/components/ui/badge/index.js';
 import { Button } from '#lib/components/ui/button/index.js';
@@ -69,7 +69,7 @@ const profile = $derived(portfolio.content.profile);
 			>
 		</div>
 	</div>
-	<Ornament class="about-ornament" />
+	<TransitionOrnament class="about-ornament" inverted />
 	<Button
 		href="/work"
 		variant="outline"

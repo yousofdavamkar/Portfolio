@@ -2,6 +2,7 @@
 import { animate } from 'motion/mini';
 import { flushSync, onMount } from 'svelte';
 import { animateScene, easeOut, motionAllowed } from '#lib/motion/scene.js';
+import { captureSharedArt } from '#lib/motion/shared-art.js';
 import { afterNavigate, beforeNavigate, onNavigate } from '$app/navigation';
 
 let { active = $bindable(false) }: { active?: boolean } = $props();
@@ -51,6 +52,10 @@ onNavigate((navigation) => {
 	const main = document.querySelector<HTMLElement>('#main');
 	if (!main || fromChapter < 0 || toChapter < 0 || !motionAllowed()) return;
 
+	const shared =
+		(from === '/' && to === '/about') || (from === '/about' && to === '/')
+			? captureSharedArt()
+			: undefined;
 	const current = generation;
 	const direction =
 		navigation.type === 'popstate' && navigation.delta
@@ -77,6 +82,7 @@ onNavigate((navigation) => {
 	);
 	cancelPlayback = () => {
 		outgoing.cancel();
+		shared?.cancel();
 		restore();
 	};
 
@@ -90,23 +96,37 @@ onNavigate((navigation) => {
 				if (current !== generation) return;
 				releaseNavigation = () => {};
 				outgoing.cancel();
-				const incoming = animate(
-					main,
-					{ opacity: [0, 1], transform: [`translateY(${direction * 24}px)`, 'translateY(0px)'] },
-					{ duration: 0.32, ease: easeOut }
-				);
+				restore();
+				shared?.hideDestination();
+				// Measure after SvelteKit has restored the new page's scroll position.
+				main.style.opacity = '0';
+				const frame = requestAnimationFrame(() => {
+					if (current !== generation) return;
+					restore();
+					const artworkFinished = shared?.play();
+					const incoming = animate(
+						main,
+						{ opacity: [0, 1], transform: [`translateY(${direction * 24}px)`, 'translateY(0px)'] },
+						{ duration: 0.32, ease: easeOut }
+					);
+					cancelPlayback = () => {
+						incoming.cancel();
+						shared?.cancel();
+						restore();
+					};
+					void Promise.all([Promise.resolve(incoming), artworkFinished]).then(() => {
+						if (current !== generation) return;
+						cancelPlayback();
+						cancelPlayback = () => {};
+						active = false;
+						setupScene(false);
+					});
+				});
 				cancelPlayback = () => {
-					incoming.cancel();
+					cancelAnimationFrame(frame);
+					shared?.cancel();
 					restore();
 				};
-				void incoming.then(() => {
-					if (current !== generation) return;
-					cancelPlayback();
-					cancelPlayback = () => {};
-					active = false;
-					// No second entrance animation after the page has already appeared.
-					setupScene(false);
-				});
 			});
 		};
 		// A paused tab or animation must never keep the router waiting indefinitely.
@@ -127,11 +147,13 @@ onMount(() => {
 		else setupScene(false);
 	};
 	window.addEventListener('keydown', stop);
+	window.addEventListener('resize', stop);
 	document.addEventListener('visibilitychange', visibility);
 	reducedMotion.addEventListener('change', preference);
 	return () => {
 		stop();
 		window.removeEventListener('keydown', stop);
+		window.removeEventListener('resize', stop);
 		document.removeEventListener('visibilitychange', visibility);
 		reducedMotion.removeEventListener('change', preference);
 	};

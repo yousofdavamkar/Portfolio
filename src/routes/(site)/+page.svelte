@@ -2,6 +2,7 @@
 import { ArrowDown } from '@lucide/svelte';
 import { getContext, onMount } from 'svelte';
 import Portrait from '#lib/components/Portrait.svelte';
+import TransitionOrnament from '#lib/components/TransitionOrnament.svelte';
 import TypedText from '#lib/components/TypedText.svelte';
 import { Button } from '#lib/components/ui/button/index.js';
 import { Skeleton } from '#lib/components/ui/skeleton/index.js';
@@ -124,19 +125,7 @@ onMount(() => {
 	></svelte:head
 >
 <section class="home-page">
-	<svg
-		class="home-ornament"
-		aria-hidden="true"
-		viewBox="0 0 300 375"
-		preserveAspectRatio="none"
-		fill="none"
-	>
-		{#each Array(10) as _, i}
-			<path
-				d={`M ${i * 10.5 + 1} -20 V 225 A ${149 - i * 10.5} ${149 - i * 10.5} 0 0 0 ${299 - i * 10.5} 225 V -20`}
-			/>
-		{/each}
-	</svg>
+	<TransitionOrnament class="home-ornament" />
 	<div class="hero-visual">
 		<Portrait home />
 		<div class="experience">
@@ -347,7 +336,7 @@ onMount(() => {
 	line-height: 1.666667cqw;
 	color: #fff;
 }
-.home-ornament {
+.home-page :global(.home-ornament) {
 	position: absolute;
 	width: 20.833333cqw;
 	height: 26.041667cqw;
@@ -371,7 +360,7 @@ onMount(() => {
 	.home-page {
 		height: max(calc(100svh - 108px), 47.916667cqw);
 	}
-	.home-ornament {
+	.home-page :global(.home-ornament) {
 		top: -108px;
 	}
 	.hero-intro .speech {
@@ -450,7 +439,7 @@ onMount(() => {
 		gap: 20px;
 		z-index: 2;
 	}
-	.home-ornament {
+	.home-page :global(.home-ornament) {
 		top: -94px;
 		right: -42px;
 		width: 114px;
