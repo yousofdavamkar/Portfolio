@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 
-async function inspectSlide(page: Page, path: string) {
+async function inspectSlide(page: Page, path: string, direction: 1 | -1) {
 	await page.waitForFunction((expected) => {
 		const outgoing = document.querySelector('[data-page-slide-outgoing]');
 		return location.pathname === expected && (outgoing?.getAnimations().length ?? 0) > 0;
@@ -25,11 +25,11 @@ async function inspectSlide(page: Page, path: string) {
 			width: incoming.getBoundingClientRect().width
 		};
 	});
-	expect(motion.nextX).toBeLessThan(0);
-	expect(motion.previousX).toBeGreaterThan(0);
+	expect(motion.nextX * direction).toBeLessThan(0);
+	expect(motion.previousX * direction).toBeGreaterThan(0);
 	expect(motion.nextY).toBe(0);
 	expect(motion.previousY).toBe(0);
-	expect(Math.abs(motion.previousX - motion.nextX - motion.width)).toBeLessThan(1);
+	expect(Math.abs((motion.previousX - motion.nextX) * direction - motion.width)).toBeLessThan(1);
 	await expect(page.locator('[data-page-slide-layer]')).toHaveAttribute('aria-hidden', 'true');
 	await expect(page.locator('[data-page-slide-layer]')).toHaveCSS('pointer-events', 'none');
 	await page.evaluate(() => {
@@ -43,17 +43,17 @@ async function inspectSlide(page: Page, path: string) {
 }
 
 for (const width of [1440, 390]) {
-	test(`About topics and Back slide left to right at ${width}px`, async ({ page }) => {
+	test(`About topics slide right and Back slides left at ${width}px`, async ({ page }) => {
 		await page.setViewportSize({ width, height: 900 });
 		await page.goto('/about', { waitUntil: 'networkidle' });
 		await page.locator('.about-topic[href="/about/journey"]').click();
-		await inspectSlide(page, '/about/journey');
+		await inspectSlide(page, '/about/journey', 1);
 		await page.getByRole('link', { name: 'Back', exact: true }).click();
-		await inspectSlide(page, '/about');
+		await inspectSlide(page, '/about', -1);
 		await page.goBack();
-		await inspectSlide(page, '/about/journey');
+		await inspectSlide(page, '/about/journey', -1);
 		await page.goForward();
-		await inspectSlide(page, '/about');
+		await inspectSlide(page, '/about', 1);
 		expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
 			true
 		);

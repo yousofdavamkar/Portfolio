@@ -61,7 +61,16 @@ onNavigate((navigation) => {
 		(from === '/' && to === '/about') || (from === '/about' && to === '/')
 			? captureSharedArt(main)
 			: undefined;
-	const slide = fromChapter === 1 && toChapter === 1 ? capturePageSlide(main) : undefined;
+	const slideDirection =
+		navigation.type === 'popstate' && navigation.delta
+			? navigation.delta < 0
+				? -1
+				: 1
+			: to === '/about'
+				? -1
+				: 1;
+	const slide =
+		fromChapter === 1 && toChapter === 1 ? capturePageSlide(main, slideDirection) : undefined;
 	const current = generation;
 	const direction =
 		navigation.type === 'popstate' && navigation.delta
