@@ -98,6 +98,10 @@ const links = [
 <style>
 /* Keep the desktop links mounted so a second click reverses the current motion. */
 .animated-menu {
+	position: relative;
+	isolation: isolate;
+	background: transparent;
+	box-shadow: none;
 	transform-origin: left center;
 	opacity: 1;
 	transform: translateX(0) scale(1);
@@ -107,13 +111,29 @@ const links = [
 		transform 260ms var(--ease-out),
 		visibility 0s;
 }
+.animated-menu::before {
+	content: "";
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: 100%;
+	border-radius: inherit;
+	background: #262626;
+	box-shadow: 0 8px 18px #0006;
+	transition: width 260ms var(--ease-out);
+	z-index: -1;
+	pointer-events: none;
+}
 .animated-menu.collapsed {
 	opacity: 0;
 	transform: translateX(-10px) scale(0.98);
 	visibility: hidden;
-	/* Let all four links finish before fading the pill itself. */
-	transition-duration: 160ms, 160ms, 0s;
-	transition-delay: 325ms, 325ms, 485ms;
+	/* Retract with the reverse stagger, then finish fading the last link. */
+	transition-duration: 105ms, 325ms, 0s;
+	transition-delay: 220ms, 0s, 325ms;
+}
+.animated-menu.collapsed::before {
+	width: 0;
+	transition: width 325ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .animated-menu a {
 	opacity: 1;
@@ -138,10 +158,10 @@ const links = [
 	animation-delay: calc((3 - var(--menu-index)) * 35ms);
 }
 :global(.mobile-sheet[data-state="closed"]) {
-	animation: mobile-menu-exit 160ms var(--ease-out) 325ms both;
+	animation: mobile-menu-exit 325ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 :global(.mobile-menu-overlay[data-state="closed"]) {
-	animation: mobile-menu-backdrop-exit 160ms ease 325ms both;
+	animation: mobile-menu-backdrop-exit 325ms ease both;
 }
 @keyframes mobile-menu-exit {
 	from {
@@ -150,7 +170,7 @@ const links = [
 	}
 	to {
 		opacity: 0;
-		transform: translateX(-40px);
+		transform: translateX(-100%);
 	}
 }
 @keyframes mobile-menu-backdrop-exit {
@@ -182,7 +202,8 @@ const links = [
 	}
 }
 :global(html[data-input="keyboard"]) .animated-menu,
-:global(html[data-input="keyboard"]) .animated-menu a {
+:global(html[data-input="keyboard"]) .animated-menu a,
+:global(html[data-input="keyboard"]) .animated-menu::before {
 	transition: none;
 }
 :global(html[data-input="keyboard"]) .mobile-menu-links a {
@@ -190,7 +211,8 @@ const links = [
 }
 @media (prefers-reduced-motion: reduce) {
 	.animated-menu,
-	.animated-menu a {
+	.animated-menu a,
+	.animated-menu::before {
 		transition: none;
 	}
 	.mobile-menu-links a,
