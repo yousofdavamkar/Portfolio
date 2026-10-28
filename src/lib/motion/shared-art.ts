@@ -13,7 +13,7 @@ function portraitClip(element: Artwork): string {
 	return `inset(${(Math.max(0, bounds.top - image.top) / image.height) * 100}% ${(Math.max(0, image.right - bounds.right) / image.width) * 100}% ${(Math.max(0, image.bottom - bounds.bottom) / image.height) * 100}% ${(Math.max(0, bounds.left - image.left) / image.width) * 100}%)`;
 }
 
-type SharedArtOptions = { artwork?: 'ornament'; backdrop?: boolean };
+type SharedArtOptions = { artwork?: 'ornament' | 'project'; backdrop?: boolean };
 
 /** Detached artwork survives either a page crossfade or a horizontal slideshow. */
 export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = {}) {
@@ -53,6 +53,8 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 		image.removeAttribute('id');
 		image.style.cssText =
 			'display:block;position:static;width:100%;height:100%;max-width:none;transform:none;opacity:1;visibility:visible;';
+		image.style.objectFit = style.objectFit;
+		image.style.objectPosition = style.objectPosition;
 		image.style.stroke = style.stroke;
 		image.style.strokeWidth = style.strokeWidth;
 		image.style.clipPath = name === 'portrait' ? portraitClip(source) : 'none';

@@ -111,6 +111,13 @@ export const saveProject = mutation({
 		bounded(args.title, 150, 'Title');
 		bounded(args.summary, 600, 'Summary');
 		bounded(args.body, 20000, 'Case study');
+		if ((args.gallery?.length ?? 0) > 20) throw new Error('Use up to 20 screenshots.');
+		for (const slide of args.gallery ?? []) {
+			if (!slide.image.trim()) throw new Error('Screenshot image is required.');
+			bounded(slide.image, 2000, 'Screenshot URL');
+			bounded(slide.caption, 500, 'Screenshot caption');
+			if (!slide.image.startsWith('/images/')) safeUrl(slide.image);
+		}
 		safeUrl(args.url);
 		if (args.image && !args.image.startsWith('/images/')) safeUrl(args.image);
 		if (!Number.isFinite(args.order) || args.stack.length > 30)

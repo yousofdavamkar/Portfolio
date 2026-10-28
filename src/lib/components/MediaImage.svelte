@@ -8,7 +8,8 @@ let {
 	height,
 	loading = 'lazy',
 	class: className = '',
-	fit = 'contain'
+	fit = 'contain',
+	sharedArt
 }: {
 	src: string;
 	alt: string;
@@ -17,6 +18,7 @@ let {
 	loading?: 'lazy' | 'eager';
 	class?: string;
 	fit?: 'contain' | 'cover';
+	sharedArt?: string;
 } = $props();
 let image = $state<HTMLImageElement>();
 let settled = $state('');
@@ -43,6 +45,7 @@ $effect(() => {
 	{#key src}
 		<img
 			bind:this={image}
+			data-shared-art={sharedArt}
 			{src}
 			{alt}
 			{width}

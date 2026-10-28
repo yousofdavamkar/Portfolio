@@ -45,6 +45,7 @@ export const projectFields = {
 	stack: v.array(v.string()),
 	image: v.string(),
 	imageId: v.optional(v.id('_storage')),
+	gallery: v.optional(v.array(v.object({ image: v.string(), caption: v.string() }))),
 	url: v.string(),
 	published: v.boolean(),
 	order: v.number()

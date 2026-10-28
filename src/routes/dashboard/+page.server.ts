@@ -67,6 +67,13 @@ export const actions = {
 				category: text(form, 'category'),
 				stack: list(form, 'stack'),
 				image: text(form, 'image'),
+				gallery: text(form, 'gallery')
+					.split('\n')
+					.filter((line) => line.trim())
+					.map((line) => {
+						const [image = '', ...caption] = line.split('|');
+						return { image: image.trim(), caption: caption.join('|').trim() };
+					}),
 				...(text(form, 'imageId') ? { imageId: text(form, 'imageId') as Id<'_storage'> } : {}),
 				url: text(form, 'url'),
 				order: Number(text(form, 'order')),

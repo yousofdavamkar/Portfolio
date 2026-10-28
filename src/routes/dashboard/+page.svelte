@@ -37,6 +37,7 @@ type Draft = {
 	stack: string;
 	image: string;
 	imageId: string;
+	gallery: string;
 	url: string;
 	published: boolean;
 	order: number;
@@ -52,6 +53,7 @@ let editing = $state<Draft>({
 	stack: '',
 	image: '',
 	imageId: '',
+	gallery: '',
 	url: '',
 	published: false,
 	order: 0
@@ -67,7 +69,10 @@ function edit(project?: Doc<'projects'>) {
 				...project,
 				id: project._id,
 				stack: project.stack.join(', '),
-				imageId: project.imageId ?? ''
+				imageId: project.imageId ?? '',
+				gallery: (project.gallery ?? [])
+					.map((slide) => `${slide.image} | ${slide.caption}`)
+					.join('\n')
 			}
 		: {
 				title: '',
@@ -78,6 +83,7 @@ function edit(project?: Doc<'projects'>) {
 				stack: '',
 				image: '',
 				imageId: '',
+				gallery: '',
 				url: '',
 				published: false,
 				order: data.projects.length
@@ -591,6 +597,21 @@ const uploadEnhanced: SubmitFunction = () => {
 					placeholder="/images/project.png"
 				/>
 				<p class="field-help">Or upload an image below. Uploaded images take priority.</p>
+			</div>
+			<div class="field">
+				<label for="project-gallery">Detail screenshots</label>
+				<Textarea
+					id="project-gallery"
+					name="gallery"
+					bind:value={editing.gallery}
+					rows={4}
+					aria-describedby="gallery-help"
+					placeholder="https://example.com/screen.png | Homepage"
+				/>
+				<p id="gallery-help" class="field-help">
+					One image path or HTTPS URL per line, followed by | and an optional caption. Up to 20
+					screenshots, shown in this order in the vertical slider.
+				</p>
 			</div>
 			<input type="hidden" name="imageId" value={editing.imageId}>
 			{#if editing.imageId}

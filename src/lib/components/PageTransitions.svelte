@@ -60,14 +60,18 @@ onNavigate((navigation) => {
 	const aboutSlide = fromChapter === 1 && toChapter === 1;
 	const aboutPortfolio =
 		(fromChapter === 1 && to === '/work') || (from === '/work' && toChapter === 1);
+	const projectDetail =
+		(from === '/work' && to.startsWith('/work/')) || (from.startsWith('/work/') && to === '/work');
 	const shared =
 		(from === '/' && to === '/about') || (from === '/about' && to === '/')
 			? captureSharedArt(main)
-			: aboutPortfolio
-				? captureSharedArt(main, { artwork: 'ornament' })
-				: aboutSlide
-					? captureSharedArt(main, { artwork: 'ornament', backdrop: false })
-					: undefined;
+			: projectDetail
+				? captureSharedArt(main)
+				: aboutPortfolio
+					? captureSharedArt(main, { artwork: 'ornament' })
+					: aboutSlide
+						? captureSharedArt(main, { artwork: 'ornament', backdrop: false })
+						: undefined;
 	const slideDirection =
 		navigation.type === 'popstate' && navigation.delta
 			? navigation.delta < 0

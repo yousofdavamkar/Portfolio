@@ -1,11 +1,13 @@
 <script lang="ts">
-import { ArrowDown, ArrowLeft, ArrowRight } from '@lucide/svelte';
-import { getContext } from 'svelte';
+import { ArrowDown, ArrowLeft, ArrowRight, Pause, Play } from '@lucide/svelte';
+import { getContext, onMount } from 'svelte';
 import MediaImage from '#lib/components/MediaImage.svelte';
 import TransitionOrnament from '#lib/components/TransitionOrnament.svelte';
 import { Button } from '#lib/components/ui/button/index.js';
+import { carouselReveal } from '#lib/motion/carousel.js';
 import { PORTFOLIO, type PortfolioContext } from '#lib/state/portfolio.svelte.js';
 import type { createProjectNavigation } from '#lib/state/project-navigation.js';
+import { navigating } from '$app/state';
 
 const portfolio = getContext<PortfolioContext>(PORTFOLIO);
 const projectNavigation =
@@ -23,8 +25,46 @@ const index = $derived(
 );
 const project = $derived(projects[index]);
 const previewProject = $derived(projects[(index + 1) % projects.length]);
-function move(direction: number) {
-	projectNavigation.setProjectIndex((index + direction + projects.length) % projects.length);
+let direction = $state(1);
+let paused = $state(false);
+let hovered = $state(false);
+let focused = $state(false);
+let hidden = $state(true);
+let reduced = $state(true);
+const playing = $derived(
+	projects.length > 1 && !paused && !hovered && !focused && !hidden && !reduced && !navigating.to
+);
+onMount(() => {
+	const preference = matchMedia('(prefers-reduced-motion: reduce)');
+	const syncPreference = () => {
+		reduced = preference.matches;
+	};
+	const syncVisibility = () => {
+		hidden = document.hidden;
+	};
+	syncPreference();
+	syncVisibility();
+	preference.addEventListener('change', syncPreference);
+	document.addEventListener('visibilitychange', syncVisibility);
+	return () => {
+		preference.removeEventListener('change', syncPreference);
+		document.removeEventListener('visibilitychange', syncVisibility);
+	};
+});
+$effect(() => {
+	// A complete reading interval starts again after every manual or automatic change.
+	const current = index;
+	if (!playing) return;
+	const timer = setTimeout(() => {
+		direction = 1;
+		projectNavigation.setProjectIndex((current + 1) % projects.length);
+	}, 6000);
+	return () => clearTimeout(timer);
+});
+function move(step: number) {
+	if (projects.length < 2) return;
+	direction = step;
+	projectNavigation.setProjectIndex((index + step + projects.length) % projects.length);
 }
 </script>
 <svelte:head
@@ -34,7 +74,23 @@ function move(direction: number) {
 		content="Selected projects in web development and interface design."
 	></svelte:head
 >
-<section class="work-page content-page">
+<section
+	class="work-page content-page"
+	aria-label="Portfolio projects"
+	aria-roledescription="carousel"
+	onpointerenter={(event) => {
+		if (event.pointerType === 'mouse') hovered = true;
+	}}
+	onpointerleave={() => (hovered = false)}
+	onfocusin={() => (focused = true)}
+	onfocusout={(event) => {
+		if (
+			!(event.relatedTarget instanceof Node) ||
+			!event.currentTarget.contains(event.relatedTarget)
+		)
+			focused = false;
+	}}
+>
 	<h1 data-reveal class="speech section-label speech-tail">
 		Portfolio <span aria-hidden="true">👨🏻‍💻</span>
 	</h1>
@@ -55,17 +111,24 @@ function move(direction: number) {
 	{/if}
 	{#if project}
 		<div class="project-showcase">
-			<div data-reveal class="project-copy" aria-live="polite">
-				<h2>{project.title}</h2>
-				<p class="body-copy">{project.summary}</p>
-				<Button href={`/work/${project.slug}`} variant="outline" class="pill-action"
-					>View Details <ArrowRight size={24} /></Button
-				>
+			<div data-reveal class="project-copy" aria-live={playing ? 'off' : 'polite'}>
+				<div use:carouselReveal={{ key: project.slug, direction }}>
+					<h2>{project.title}</h2>
+					<p class="body-copy">{project.summary}</p>
+					<Button href={`/work/${project.slug}`} variant="outline" class="pill-action"
+						>View Details <ArrowRight size={24} /></Button
+					>
+				</div>
 			</div>
-			<a class="project-art" href={`/work/${project.slug}`} aria-label={`View ${project.title}`}
+			<a
+				use:carouselReveal={{ key: project.slug, direction }}
+				class="project-art"
+				href={`/work/${project.slug}`}
+				aria-label={`View ${project.title}`}
 				><MediaImage
 					loading="eager"
 					src={project.image}
+					sharedArt="project"
 					alt={`${project.title} project preview`}
 					width={612}
 					height={537}
@@ -98,11 +161,28 @@ function move(direction: number) {
 				>
 					<span>{index + 1}</span><span>/</span><span>{projects.length}</span>
 				</div>
+				{#if projects.length > 1 && !reduced}
+					<Button
+						variant="ghost"
+						size="sm"
+						class="autoplay-control"
+						onclick={() => (paused = !paused)}
+						aria-label={paused ? 'Play project slideshow' : 'Pause project slideshow'}
+					>
+						{#if paused}
+							<Play size={14} />
+						{:else}
+							<Pause size={14} />
+						{/if}
+						{paused ? 'Play' : 'Pause'}
+					</Button>
+				{/if}
 			</div>
 		</div>
 		{#if previewProject}
 			<a
 				class="project-preview"
+				onclick={() => projectNavigation.setProjectIndex((index + 1) % projects.length)}
 				href={`/work/${previewProject.slug}`}
 				aria-label={`Preview ${previewProject.title}`}
 			>
@@ -130,6 +210,11 @@ function move(direction: number) {
 </section>
 
 <style>
+.project-pagination :global(.autoplay-control) {
+	font-size: 12px;
+	color: var(--muted-foreground);
+	min-height: 32px;
+}
 .project-preview {
 	display: none;
 }
