@@ -12,12 +12,12 @@
 </script>
 <svelte:head><title>Contact me — Yosef Davamkar</title><meta name="description" content="Have a project in mind? Start a conversation with Yosef Davamkar."/></svelte:head>
 <section class="contact-page content-page">
- <h1 class="speech section-label speech-tail">Contact me <span aria-hidden="true">🙋🏻‍♂️</span></h1>
- <div class="contact-grid"><div class="contact-copy"><span class="eyebrow">GOOD THINGS START WITH A CONVERSATION</span><h2>Let’s make<br/>something <span class="accent-text">great.</span></h2><p class="body-copy">A new idea, an interesting challenge, or just a hello.<br class="desktop-break"/> I’d love to hear from you.</p>
+ <h1 data-reveal class="speech section-label speech-tail">Contact me <span aria-hidden="true">🙋🏻‍♂️</span></h1>
+ <div class="contact-grid"><div data-reveal class="contact-copy"><span class="eyebrow">GOOD THINGS START WITH A CONVERSATION</span><h2>Let’s make<br/>something <span class="accent-text">great.</span></h2><p class="body-copy">A new idea, an interesting challenge, or just a hello.<br class="desktop-break"/> I’d love to hear from you.</p>
   <div class="social-links">{#if profile?.email}<a href={`mailto:${profile.email}`} aria-label="Email Yosef"><Mail/></a>{/if}{#if profile?.github}<a href={profile.github} target="_blank" rel="noreferrer" aria-label="GitHub"><Code2/></a>{/if}{#if profile?.linkedin}<a href={profile.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn"><BriefcaseBusiness/></a>{/if}</div>
   <MediaImage class="contact-art" src="/images/contact-art.png" alt="" width={642} height={566} loading="lazy"/>
  </div>
- <div class="contact-form-panel">{#if form?.success}<div class="success-message" role="status"><span class="success-icon"><Check size={28}/></span><h2>Message received.</h2><p>Thank you for reaching out. I’ll get back to you using the email you shared.</p><Button variant="outline" class="pill-action" onclick={()=>form=null}>Send another message <ArrowUpRight/></Button></div>{:else}
+ <div data-reveal class="contact-form-panel">{#if form?.success}<div class="success-message" role="status"><span class="success-icon"><Check size={28}/></span><h2>Message received.</h2><p>Thank you for reaching out. I’ll get back to you using the email you shared.</p><Button variant="outline" class="pill-action" onclick={()=>form=null}>Send another message <ArrowUpRight/></Button></div>{:else}
  <form method="POST" use:enhance={()=>{pending=true;return async({update})=>{await update();pending=false;};}}>
   <h3>Tell me what you’re thinking.</h3><p class="form-description">Your next project could start right here.</p>
   <div class="field"><label for="name">Your name</label><Input id="name" name="name" autocomplete="name" placeholder="How should I call you?" required maxlength={100} value={form?.name??''}/></div>

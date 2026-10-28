@@ -44,3 +44,9 @@ References: [original Figma](https://www.figma.com/design/Gis2vvOMoRcwh63BEEAmuW
 ## Loading behavior
 
 The [shadcn-svelte Skeleton](https://www.shadcn-svelte.com/docs/components/skeleton) component covers pending page navigation, resume lookup and project images. Navigation placeholders appear only after 150 ms and clear as soon as navigation settles. Image frames reserve space, handle cached loads and replace failed images with an accessible fallback. Reduced-motion preferences disable skeleton pulsing. Secondary artwork, the about portrait and dashboard thumbnails use native lazy loading and asynchronous decoding; the homepage portrait and featured project images remain eager. The Convex live-update client loads in a separate JavaScript chunk after hydration while server-rendered content remains available.
+
+## Motion and page transitions
+
+[Motion's official Svelte 5 integration](https://motion.dev/docs/svelte) powers the public portfolio with `animateView`, `animate`, `inView`, and `scroll`. The next-page arrows and navigation links use a vertical page sweep, staggered content, shared portrait/project artwork, and a chapter interlude with concentric rings and accent graphics. Browser back reverses the direction. A scroll-progress line and rotating orbit respond to normal document scrolling; scrolling is not hijacked.
+
+The router retains its normal history, focus and scroll behavior. Data-loading skeletons clear before outgoing snapshots are captured. Reduced-motion preferences and keyboard navigation skip decorative transitions, and older browsers receive a simple entry animation. Observers and animations are cleaned up between pages. Authentication and dashboard routes do not use the public portfolio's cinematic transitions.

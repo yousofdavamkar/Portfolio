@@ -1,5 +1,6 @@
 <script lang="ts">
  import './layout.css';
+ import PageTransitions from '#lib/components/PageTransitions.svelte';
  import NavigationSkeleton from '#lib/components/NavigationSkeleton.svelte';
  import {onMount} from 'svelte';
  onMount(()=>{const keyboard=()=>document.documentElement.dataset.input='keyboard';const pointer=()=>document.documentElement.dataset.input='pointer';window.addEventListener('keydown',keyboard);window.addEventListener('pointerdown',pointer);return()=>{window.removeEventListener('keydown',keyboard);window.removeEventListener('pointerdown',pointer);};});
@@ -9,8 +10,10 @@
  import { Toaster } from '#lib/components/ui/sonner/index.js';
  let {children}=$props();
  let routeLoading=$state(false);
+ let transitioning=$state(false);
 </script>
 <svelte:head><link rel="icon" href="/favicon.svg"/><meta name="theme-color" content="#121212"/></svelte:head>
-<div inert={routeLoading} aria-busy={routeLoading}>{@render children()}</div>
-<NavigationSkeleton bind:active={routeLoading}/>
+<div inert={routeLoading && !transitioning} aria-busy={routeLoading || transitioning}>{@render children()}</div>
+<PageTransitions bind:active={transitioning}/>
+<NavigationSkeleton bind:active={routeLoading} suppressed={transitioning}/>
 <Toaster theme="dark" richColors position="bottom-right" />

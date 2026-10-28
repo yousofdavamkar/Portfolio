@@ -145,3 +145,12 @@ html[data-input=keyboard] *,html[data-input=keyboard] *::before,html[data-input=
 
 .dashboard-project-image .dashboard-media{height:100%;width:100%}
 .resume-loading{max-width:100%;min-height:58px}
+
+.site-shell>main{position:relative;z-index:1}
+/* Stable names let Motion morph the same artwork across separate route components. */
+.portrait-scene{view-transition-name:portfolio-portrait}
+.project-art .media-image,.detail-art .media-image{view-transition-name:portfolio-project}
+
+/* A closing mobile menu must not appear in the outgoing page snapshot. */
+html[data-page-transition=active] [data-slot=sheet-content],
+html[data-page-transition=active] [data-slot=sheet-overlay]{visibility:hidden!important}

@@ -4,6 +4,7 @@
  import {api} from '../../../convex/_generated/api';
  import {PORTFOLIO,type PortfolioContext} from '#lib/state/portfolio.svelte.js';
  import {createPreferences} from '#lib/state/preferences.js';
+ import SceneGraphics from '#lib/components/SceneGraphics.svelte';
  import Header from '#lib/components/Header.svelte';
  let {data,children}=$props();
  let content=$state(untrack(()=>data.content));
@@ -28,6 +29,7 @@
 </script>
 <a class="skip-link" href="#main">Skip to content</a>
 <div class="site-shell">
+ <SceneGraphics/>
  <Header {preferences}/>
  <main id="main">{@render children()}</main>
  {#if !connected}<p class="connection-note" role="status">Showing the last available version. Reconnecting…</p>{/if}

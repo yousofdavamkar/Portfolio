@@ -11,10 +11,10 @@
 </script>
 <svelte:head><title>About me — {profile?.name}</title><meta name="description" content={profile?.bio}/></svelte:head>
 <section class="about-page content-page">
- <h1 class="speech section-label speech-tail">About me <span aria-hidden="true">😎</span></h1>
+ <h1 data-reveal class="speech section-label speech-tail">About me <span aria-hidden="true">😎</span></h1>
  <div class="about-grid">
   <div class="about-visual"><Portrait compact/></div>
-  <div class="about-content">
+  <div data-reveal class="about-content">
    <h2 class="speech question-bubble">What do you want to know about me?</h2>
    <p class="body-copy">{profile?.bio}</p>
    <Accordion.Root type="single" class="about-accordion">

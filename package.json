@@ -45,6 +45,7 @@
 		"@lucide/svelte": "^1.63.0",
 		"@sveltejs/adapter-node": "^6.0.0",
 		"convex": "^1.48.0",
+		"motion": "^14.7.1",
 		"swr-store": "^1.0.0",
 		"zustand": "^5.0.16"
 	}

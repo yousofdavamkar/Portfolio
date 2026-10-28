@@ -1,17 +1,17 @@
 <script lang="ts">
  import { navigating } from '$app/state';
  import { Skeleton } from '#lib/components/ui/skeleton/index.js';
- let { active = $bindable(false) }: { active?: boolean } = $props();
+ let { active = $bindable(false), suppressed = false }: { active?: boolean; suppressed?: boolean } = $props();
  const pending = $derived(Boolean(navigating.to && navigating.from?.url.pathname !== navigating.to.url.pathname));
  $effect(() => {
-  if (!pending) { active = false; return; }
+  if (!pending || suppressed) { active = false; return; }
   // Avoid flashing a loading screen for cached and instant navigations.
   const timer = setTimeout(() => active = true, 150);
   return () => clearTimeout(timer);
  });
 </script>
 
-{#if active && pending}
+{#if active && pending && !suppressed}
  <div class="navigation-loading" role="status" aria-live="polite" aria-label="Loading page" aria-busy="true">
   <span class="sr-only">Loading page…</span>
   <div aria-hidden="true" class="loading-shell">

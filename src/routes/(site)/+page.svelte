@@ -18,11 +18,11 @@
  <Ornament class="hero-ornament"/>
  <div class="hero-visual"><Portrait/><div class="experience"><strong>{profile?.experience??'3+'}</strong><span>years of<br/>experience</span></div></div>
  <div class="hero-intro">
-  <div class="intro-label"><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>A little introduction</span></div>
-  <p class="speech greeting">Hey! <span aria-hidden="true">👋 ☺️</span></p>
-  <h1 class="speech intro-title">I’m {profile?.name??'Yosef Davamkar'}, <br/>a <span>{profile?.role??'Fullstack web developer'}!</span></h1>
-  <div class="speech speech-tail resume-bubble">{#if resumePending}<div class="resume-loading" role="status" aria-label="Loading resume"><Skeleton class="h-5 w-44 bg-neutral-200" aria-hidden="true"/><Skeleton class="mt-3 h-5 w-52 max-w-full bg-neutral-200" aria-hidden="true"/></div>{:else if resume}<p>A little more about me.</p><a href={resume} target="_blank" rel="noreferrer" class="text-link">Download my CV <Download size={17}/></a>{:else}<p>Have something in mind?</p><a href="/contact" class="text-link">Let’s build it together <ArrowUpRight size={19}/></a>{/if}</div>
-  <div class="hero-meta"><span class:available={profile?.available} class="status-dot"></span>{profile?.available?'Open to new opportunities':'Currently focused on my work'}</div>
+  <div data-reveal class="intro-label"><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>A little introduction</span></div>
+  <p data-reveal class="speech greeting">Hey! <span aria-hidden="true">👋 ☺️</span></p>
+  <h1 data-reveal class="speech intro-title">I’m {profile?.name??'Yosef Davamkar'}, <br/>a <span>{profile?.role??'Fullstack web developer'}!</span></h1>
+  <div data-reveal class="speech speech-tail resume-bubble">{#if resumePending}<div class="resume-loading" role="status" aria-label="Loading resume"><Skeleton class="h-5 w-44 bg-neutral-200" aria-hidden="true"/><Skeleton class="mt-3 h-5 w-52 max-w-full bg-neutral-200" aria-hidden="true"/></div>{:else if resume}<p>A little more about me.</p><a href={resume} target="_blank" rel="noreferrer" class="text-link">Download my CV <Download size={17}/></a>{:else}<p>Have something in mind?</p><a href="/contact" class="text-link">Let’s build it together <ArrowUpRight size={19}/></a>{/if}</div>
+  <div data-reveal class="hero-meta"><span class:available={profile?.available} class="status-dot"></span>{profile?.available?'Open to new opportunities':'Currently focused on my work'}</div>
  </div>
  <Button href="/about" variant="outline" size="icon" class="section-next" aria-label="Discover more about me"><ArrowDown size={22}/></Button>
  <span class="page-note">DESIGN WITH INTENT. BUILD WITH CARE.</span>
