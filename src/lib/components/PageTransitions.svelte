@@ -66,7 +66,7 @@ onNavigate((navigation) => {
 		(from === '/' && to === '/about') || (from === '/about' && to === '/')
 			? captureSharedArt(main)
 			: projectDetail
-				? captureSharedArt(main)
+				? captureSharedArt(main, { backdrop: false })
 				: aboutPortfolio
 					? captureSharedArt(main, { artwork: 'ornament' })
 					: aboutSlide
@@ -77,10 +77,10 @@ onNavigate((navigation) => {
 			? navigation.delta < 0
 				? 1
 				: -1
-			: to === '/about'
+			: to === '/about' || to === '/work'
 				? 1
 				: -1;
-	const slide = aboutSlide ? capturePageSlide(main, slideDirection) : undefined;
+	const slide = aboutSlide || projectDetail ? capturePageSlide(main, slideDirection) : undefined;
 	const current = generation;
 	let preview: HTMLElement | null = null;
 	let previewOpacity = '';
