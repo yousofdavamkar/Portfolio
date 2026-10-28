@@ -142,3 +142,6 @@
 @media(max-width:359px){.hero-intro{margin:0 24px}.hero-intro .intro-title{font-size:18px}.resume-bubble{font-size:15px}.hero-visual{height:390px;min-height:390px}.experience{right:7%}.dashboard-body{padding:20px 15px}.dashboard-header h1{font-size:20px}.dashboard-tab-list{gap:19px}.contact-copy h2{font-size:34px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 html[data-input=keyboard] *,html[data-input=keyboard] *::before,html[data-input=keyboard] *::after{animation:none!important;transition:none!important}
+
+.dashboard-project-image .dashboard-media{height:100%;width:100%}
+.resume-loading{max-width:100%;min-height:58px}
