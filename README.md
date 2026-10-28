@@ -16,7 +16,7 @@ A responsive SvelteKit portfolio and authenticated content studio, based on the 
 npm ci
 npx convex dev --configure
 npx @convex-dev/auth --skip-git-check --web-server-url http://localhost:5173
-node scripts/provision-dev.mjs
+npm run setup:dev
 npx convex dev --once
 npx convex run portfolio:seed '{}'
 npm run dev
@@ -28,10 +28,19 @@ Visit `/login` to access `/dashboard`. The studio manages profile text, skills, 
 
 ## Checks and production
 
+Use Node.js 22.18 or newer. Development takes place on `develop`; `main` is reserved for production. Deployment automation will be configured when Vercel is connected.
+
 ```sh
+npm run lint
 npm run check
 npm run build
 ```
+
+`build` runs Biome and the TypeScript checks before Vite builds the application. TypeScript **7.0.2** is installed as `@typescript/native`; `npm run tsc` explicitly uses its native compiler, and `svelte-check --tsgo` uses it for Svelte diagnostics. The explicit compiler path prevents npm’s transitive TypeScript 6 binary from taking precedence. TypeScript 6 remains installed under the `typescript` name for the JavaScript compiler API used by SvelteKit and Svelte's tooling. This follows [Svelte's supported TypeScript 7 setup](https://github.com/sveltejs/language-tools/blob/master/packages/svelte-check/README.md#typescript-7-supports).
+
+`tsconfig.strict.json` applies to the frontend, maintained scripts, and Convex. It enables strict checking, exact optional properties, checked indexed access, explicit index-signature access, unused-code checks, return-path checks, and erasable TypeScript syntax. App-owned code is TypeScript, including `scripts/provision-dev.ts`; Convex-generated JavaScript and declarations remain generator-managed. Third-party declarations use `skipLibCheck`. Convex Auth's published optional-field types are re-inferred from its validators in `convex/schema.ts` without changing runtime tables or indexes.
+
+Biome **2.6.3** handles formatting, import organization, and linting, with errors for explicit `any`, non-null assertions, and `@ts-ignore`. Use `npm run format`, `npm run format:check`, or `npm run lint:fix`. Generated files, build output, and the npm lockfile are excluded. Full Svelte formatting and linting are [experimental in Biome](https://biomejs.dev/introduction/language-support/#html-super-languages-support); Svelte's compiler also checks templates and accessibility. The existing global stylesheet's specificity and `!important` overrides are retained, including reduced-motion overrides. The shared editor settings enable Biome formatting and fixes on save.
 
 The Node adapter writes `build/`. Configure a production Convex deployment, its authentication keys and `SITE_URL`, a matching server-only `CONTACT_SECRET`, and `PUBLIC_CONVEX_URL` before building for production. Run `node build` behind HTTPS with the correct `ORIGIN`; production cookies are Secure. Provision the administrator privately for that deployment. Do not reuse development credentials.
 
