@@ -1,5 +1,6 @@
 <script lang="ts">
-import { ArrowUpRight, Menu, X } from '@lucide/svelte';
+import { ArrowUpRight } from '@lucide/svelte';
+import MenuIcon from '#lib/components/MenuIcon.svelte';
 import { Button } from '#lib/components/ui/button/index.js';
 import * as Sheet from '#lib/components/ui/sheet/index.js';
 import { page } from '$app/state';
@@ -23,11 +24,7 @@ const links = [
 			aria-label={collapsed ? 'Show navigation' : 'Collapse navigation'}
 			aria-expanded={!collapsed}
 			aria-controls="desktop-menu"
-			>{#if collapsed}
-				<Menu class="size-8" size={24} strokeWidth={1.5} />
-			{:else}
-				<X class="size-10" size={28} strokeWidth={1} />
-			{/if}</Button
+			><MenuIcon expanded={!collapsed} /></Button
 		>
 		<nav
 			id="desktop-menu"
@@ -56,9 +53,22 @@ const links = [
 	<div class="mobile-navigation">
 		<Sheet.Root bind:open>
 			<Sheet.Trigger class="round-button mobile-menu" aria-label="Open navigation"
-				><Menu class="size-8" size={24} strokeWidth={1.5} /></Sheet.Trigger
+				><MenuIcon expanded={open} /></Sheet.Trigger
 			>
-			<Sheet.Content side="left" class="mobile-sheet">
+			<Sheet.Content side="left" class="mobile-sheet" showCloseButton={false}>
+				<Sheet.Close>
+					{#snippet child({ props })}
+						<Button
+							variant="ghost"
+							class="absolute top-4 right-4"
+							size="icon-sm"
+							aria-label="Close"
+							{...props}
+						>
+							<MenuIcon expanded={open} />
+						</Button>
+					{/snippet}
+				</Sheet.Close>
 				<Sheet.Header
 					><Sheet.Title>Yousof Davamkar<span class="accent-text">.</span></Sheet.Title
 					><Sheet.Description>Fullstack web developer</Sheet.Description></Sheet.Header
