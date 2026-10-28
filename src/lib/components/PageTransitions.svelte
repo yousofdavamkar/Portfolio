@@ -54,7 +54,7 @@ onNavigate((navigation) => {
 
 	const shared =
 		(from === '/' && to === '/about') || (from === '/about' && to === '/')
-			? captureSharedArt()
+			? captureSharedArt(main)
 			: undefined;
 	const current = generation;
 	const direction =
@@ -106,8 +106,11 @@ onNavigate((navigation) => {
 					const artworkFinished = shared?.play();
 					const incoming = animate(
 						main,
-						{ opacity: [0, 1], transform: [`translateY(${direction * 24}px)`, 'translateY(0px)'] },
-						{ duration: 0.32, ease: easeOut }
+						{
+							opacity: [0, 1],
+							transform: [`translateY(${shared ? 0 : direction * 24}px)`, 'translateY(0px)']
+						},
+						{ duration: shared ? 0.46 : 0.32, ease: shared ? 'easeInOut' : easeOut }
 					);
 					cancelPlayback = () => {
 						incoming.cancel();
@@ -132,7 +135,8 @@ onNavigate((navigation) => {
 		// A paused tab or animation must never keep the router waiting indefinitely.
 		const watchdog = setTimeout(release, 220);
 		releaseNavigation = release;
-		void outgoing.then(release, release);
+		if (shared) release();
+		else void outgoing.then(release, release);
 	});
 });
 

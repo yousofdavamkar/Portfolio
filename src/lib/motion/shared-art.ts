@@ -1,5 +1,7 @@
 import { animate } from 'motion/mini';
-import { easeOut } from './scene.js';
+
+const travelEase = [0.42, 0, 0.2, 1] as const;
+const travelDuration = 1.05;
 
 type Artwork = HTMLImageElement | SVGSVGElement;
 
@@ -12,10 +14,11 @@ function portraitClip(element: Artwork): string {
 }
 
 /** Detached artwork survives the route swap while the real pages crossfade. */
-export function captureSharedArt() {
+export function captureSharedArt(main: HTMLElement) {
 	const layer = document.createElement('div');
 	layer.dataset['sharedArtLayer'] = '';
 	layer.setAttribute('aria-hidden', 'true');
+	layer.inert = true;
 	layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:15;overflow:hidden;';
 	const shell = document.querySelector('.site-shell')?.getBoundingClientRect();
 	if (shell)
@@ -39,7 +42,7 @@ export function captureSharedArt() {
 			const angle = Number(source.dataset['artAngle'] ?? 0);
 			const wrapper = document.createElement('div');
 			wrapper.dataset['artGhost'] = name;
-			wrapper.style.cssText = `position:absolute;left:0;top:0;width:${rect.width}px;height:${rect.height}px;transform-origin:center;opacity:${style.opacity};`;
+			wrapper.style.cssText = `position:absolute;left:0;top:0;width:${rect.width}px;height:${rect.height}px;transform-origin:center;will-change:transform;opacity:${style.opacity};`;
 			wrapper.style.transform = `translate(${rect.x}px, ${rect.y}px) rotate(${angle}deg)`;
 			const image = source.cloneNode(true);
 			if (!(image instanceof SVGSVGElement || image instanceof HTMLImageElement)) return [];
@@ -57,7 +60,23 @@ export function captureSharedArt() {
 			return [{ name, rect, angle, wrapper, image }];
 		}
 	);
-	if (items.length) document.body.append(layer);
+	// Crossfade the previous composition without holding the router or the artwork still.
+	const backdrop = document.createElement('div');
+	const mainBounds = main.getBoundingClientRect();
+	backdrop.dataset['artPage'] = '';
+	backdrop.style.cssText = `position:absolute;left:${mainBounds.x}px;top:${mainBounds.y}px;width:${mainBounds.width}px;height:${mainBounds.height}px;container-type:inline-size;pointer-events:none;`;
+	const previousPage = main.cloneNode(true);
+	if (previousPage instanceof HTMLElement) {
+		previousPage.removeAttribute('id');
+		previousPage.style.cssText = 'position:relative;margin:0;width:100%;opacity:1;transform:none;';
+		for (const node of previousPage.querySelectorAll('[id], [data-shared-art]')) {
+			node.removeAttribute('id');
+			node.removeAttribute('data-shared-art');
+		}
+		backdrop.append(previousPage);
+		layer.prepend(backdrop);
+	}
+	document.body.append(layer);
 	const cancel = () => {
 		for (const animation of animations.splice(0)) animation.cancel();
 		for (const reset of restore.splice(0)) reset();
@@ -71,6 +90,9 @@ export function captureSharedArt() {
 			}
 		},
 		play() {
+			const fade = animate(backdrop, { opacity: [1, 0] }, { duration: 0.38, ease: 'easeInOut' });
+			animations.push(fade);
+			void fade.then(() => backdrop.remove());
 			for (const item of items) {
 				const target = document.querySelector<Artwork>(`[data-shared-art="${item.name}"]`);
 				if (!target) {
@@ -84,18 +106,25 @@ export function captureSharedArt() {
 				// The box retains its source size; compensate translation for scaling about its center.
 				const x = end.x + (end.width - item.rect.width) / 2;
 				const y = end.y + (end.height - item.rect.height) / 2;
-				const start = `translate(${item.rect.x}px, ${item.rect.y}px) rotate(${item.angle}deg) scale(1, 1)`;
-				const finish = `translate(${x}px, ${y}px) rotate(${angle}deg) scale(${scaleX}, ${scaleY})`;
 				const ornament = item.name === 'ornament';
-				const middle = `translate(${(item.rect.x + x) / 2 - (ornament ? 35 : 0)}px, ${(item.rect.y + y) / 2}px) rotate(${(item.angle + angle) / 2}deg) scale(${(1 + scaleX) / 2}, ${(1 + scaleY) / 2})`;
+				// Sample a continuous arc rather than two straight segments meeting at a corner.
+				// One easing curve drives position, rotation and scale for the entire journey.
+				const transforms = Array.from({ length: 61 }, (_, index) => {
+					const progress = index / 60;
+					const bend = ornament ? Math.sin(Math.PI * progress) * 35 : 0;
+					const left = item.rect.x + (x - item.rect.x) * progress - bend;
+					const top = item.rect.y + (y - item.rect.y) * progress;
+					const rotation = item.angle + (angle - item.angle) * progress;
+					return `translate3d(${left}px, ${top}px, 0) rotate(${rotation}deg) scale(${1 + (scaleX - 1) * progress}, ${1 + (scaleY - 1) * progress})`;
+				});
 				animations.push(
 					animate(
 						item.wrapper,
 						{
-							transform: ornament ? [start, middle, finish] : [start, finish],
+							transform: transforms,
 							opacity: Number(getComputedStyle(target).opacity)
 						},
-						{ duration: ornament ? 0.68 : 0.58, ease: easeOut }
+						{ duration: travelDuration, ease: travelEase }
 					)
 				);
 				if (!ornament)
@@ -103,7 +132,7 @@ export function captureSharedArt() {
 						animate(
 							item.image,
 							{ clipPath: portraitClip(target) },
-							{ duration: 0.58, ease: easeOut }
+							{ duration: travelDuration, ease: travelEase }
 						)
 					);
 			}
