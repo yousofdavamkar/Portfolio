@@ -64,11 +64,11 @@ onNavigate((navigation) => {
 	const slideDirection =
 		navigation.type === 'popstate' && navigation.delta
 			? navigation.delta < 0
-				? -1
-				: 1
+				? 1
+				: -1
 			: to === '/about'
-				? -1
-				: 1;
+				? 1
+				: -1;
 	const slide =
 		fromChapter === 1 && toChapter === 1 ? capturePageSlide(main, slideDirection) : undefined;
 	const current = generation;

@@ -43,17 +43,17 @@ async function inspectSlide(page: Page, path: string, direction: 1 | -1) {
 }
 
 for (const width of [1440, 390]) {
-	test(`About topics slide right and Back slides left at ${width}px`, async ({ page }) => {
+	test(`About topics slide left and Back slides right at ${width}px`, async ({ page }) => {
 		await page.setViewportSize({ width, height: 900 });
 		await page.goto('/about', { waitUntil: 'networkidle' });
 		await page.locator('.about-topic[href="/about/journey"]').click();
-		await inspectSlide(page, '/about/journey', 1);
-		await page.getByRole('link', { name: 'Back', exact: true }).click();
-		await inspectSlide(page, '/about', -1);
-		await page.goBack();
 		await inspectSlide(page, '/about/journey', -1);
-		await page.goForward();
+		await page.getByRole('link', { name: 'Back', exact: true }).click();
 		await inspectSlide(page, '/about', 1);
+		await page.goBack();
+		await inspectSlide(page, '/about/journey', 1);
+		await page.goForward();
+		await inspectSlide(page, '/about', -1);
 		expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
 			true
 		);
