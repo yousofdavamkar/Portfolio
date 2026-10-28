@@ -23,9 +23,9 @@ const links = [
 			aria-label={collapsed ? 'Show navigation' : 'Collapse navigation'}
 			aria-expanded={!collapsed}
 			>{#if collapsed}
-				<Menu size={22} />
+				<Menu class="size-8" size={24} strokeWidth={1.5} />
 			{:else}
-				<X size={22} />
+				<X class="size-10" size={28} strokeWidth={1} />
 			{/if}</Button
 		>
 		{#if !collapsed}
@@ -49,7 +49,7 @@ const links = [
 	<div class="mobile-navigation">
 		<Sheet.Root bind:open>
 			<Sheet.Trigger class="round-button mobile-menu" aria-label="Open navigation"
-				><Menu size={23} /></Sheet.Trigger
+				><Menu class="size-8" size={24} strokeWidth={1.5} /></Sheet.Trigger
 			>
 			<Sheet.Content side="left" class="mobile-sheet">
 				<Sheet.Header

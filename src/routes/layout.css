@@ -222,6 +222,7 @@ textarea {
 	position: relative;
 	min-height: 100svh;
 	max-width: 1920px;
+	container-type: inline-size;
 	margin: 0 auto;
 	background: linear-gradient(159deg, #101010 12%, #202020 65%, #303030);
 	overflow: clip;
@@ -263,13 +264,14 @@ textarea {
 .nav-pill {
 	display: flex;
 	align-items: center;
-	gap: 30px;
+	gap: 32px;
 	height: 56px;
-	padding: 0 34px;
+	padding: 0 40px;
 	border-radius: 100px;
 	background: #262626;
 	box-shadow: 0 8px 18px #0006;
-	font-size: 16px;
+	font-size: 18px;
+	font-weight: 500;
 }
 .nav-pill a {
 	color: var(--primary);
@@ -307,71 +309,7 @@ textarea {
 .speech > * {
 	position: relative;
 }
-.home-page {
-	position: relative;
-	min-height: calc(100svh - 120px);
-	display: grid;
-	grid-template-columns: 54% 46%;
-	align-items: end;
-	padding-top: 36px;
-	overflow: hidden;
-}
-.hero-visual {
-	height: calc(100svh - 156px);
-	min-height: 540px;
-	max-height: 850px;
-	position: relative;
-}
-.hero-intro {
-	align-self: center;
-	position: relative;
-	z-index: 2;
-	width: min(440px, calc(100% - 56px));
-	padding: 10px 0 80px;
-}
-.hero-intro .speech {
-	margin: 20px 0;
-}
-.hero-intro .intro-title {
-	font-size: clamp(22px, 1.95vw, 29px);
-	letter-spacing: -0.7px;
-	padding: 23px 27px;
-	border-radius: 32px;
-	line-height: 1.48;
-}
-.intro-label {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 12px;
-	font-size: 14px;
-	letter-spacing: 0.1px;
-	margin-bottom: 32px;
-}
-.typing-dots {
-	display: flex;
-	gap: 7px;
-	padding: 13px 17px;
-	background: #fff;
-	border-radius: 24px;
-	width: fit-content;
-}
-.typing-dots i {
-	width: 11px;
-	height: 11px;
-	border-radius: 50%;
-	background: #b8b8b8;
-}
-.typing-dots i:nth-child(2) {
-	background: #d6d6d6;
-}
-.typing-dots i:nth-child(3) {
-	background: #e5e5e5;
-}
-.resume-bubble {
-	font-size: 20px;
-	padding: 18px 27px !important;
-}
+
 .text-link {
 	color: #8768d4;
 	text-decoration: underline;
@@ -380,14 +318,7 @@ textarea {
 	gap: 8px;
 	align-items: center;
 }
-.hero-meta {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	color: #aaa;
-	font-size: 12px;
-	margin-top: 32px;
-}
+
 .status-dot {
 	width: 7px;
 	height: 7px;
@@ -400,31 +331,7 @@ textarea {
 	background: var(--primary);
 	box-shadow: 0 0 0 4px #ffca050c;
 }
-.experience {
-	position: absolute;
-	top: 30px;
-	left: 15%;
-	display: flex;
-	align-items: center;
-	gap: 14px;
-}
-.experience strong {
-	font-weight: 400;
-	font-size: 42px;
-	color: #fff;
-	letter-spacing: -2px;
-}
-.experience span {
-	font-size: 13px;
-	line-height: 1.6;
-	color: #c3c3c3;
-}
-.hero-ornament {
-	right: 6%;
-	top: -120px;
-	width: 180px !important;
-	height: 300px !important;
-}
+
 .section-next {
 	position: absolute;
 	bottom: 36px;
@@ -436,14 +343,7 @@ textarea {
 	height: 54px;
 	background: transparent;
 }
-.page-note {
-	position: absolute;
-	bottom: 48px;
-	right: 5.55%;
-	font-size: 9px;
-	color: #8b8b8b;
-	letter-spacing: 2px;
-}
+
 .content-page {
 	min-height: calc(100svh - 120px);
 	position: relative;
@@ -1388,26 +1288,6 @@ textarea {
 		color: #fff;
 	}
 }
-@media (min-width: 1600px) {
-	.home-page {
-		padding-top: 70px;
-	}
-	.hero-intro {
-		width: 500px;
-	}
-	.hero-intro .intro-title {
-		font-size: 32px;
-	}
-	.hero-intro .speech {
-		margin: 26px 0;
-	}
-	.hero-visual {
-		max-height: none;
-	}
-	.experience {
-		left: 16%;
-	}
-}
 @media (max-width: 1100px) {
 	.site-header {
 		padding-left: 5%;
@@ -1419,33 +1299,7 @@ textarea {
 		padding: 0 27px;
 		font-size: 14px;
 	}
-	.home-page {
-		grid-template-columns: 51% 49%;
-		min-height: calc(100svh - 108px);
-	}
-	.hero-visual {
-		min-height: 550px;
-		height: calc(100svh - 144px);
-	}
-	.hero-intro {
-		width: calc(100% - 38px);
-	}
-	.hero-intro .intro-title {
-		font-size: 23px;
-	}
-	.resume-bubble {
-		font-size: 17px;
-	}
-	.experience {
-		left: 13%;
-		top: 35px;
-	}
-	.experience strong {
-		font-size: 33px;
-	}
-	.experience span {
-		font-size: 11px;
-	}
+
 	.about-content {
 		padding-right: 0;
 	}
@@ -1536,89 +1390,13 @@ textarea {
 	.site-shell {
 		background: linear-gradient(150deg, #101010, #232323 65%, #303030);
 	}
-	.home-page {
-		display: flex;
-		flex-direction: column;
-		padding-top: 10px;
-		min-height: calc(100svh - 94px);
-		align-items: stretch;
-	}
-	.hero-intro {
-		order: 0;
-		width: auto;
-		max-width: 520px;
-		align-self: stretch;
-		margin: 0 32px;
-		padding: 15px 0 10px;
-		z-index: 2;
-	}
-	.intro-label {
-		font-size: 12px;
-		gap: 10px;
-		margin-bottom: 25px;
-	}
-	.typing-dots {
-		padding: 8px 11px;
-		gap: 4px;
-	}
-	.typing-dots i {
-		width: 7px;
-		height: 7px;
-	}
-	.hero-intro .speech {
-		margin: 16px 0;
-	}
+
 	.speech {
 		font-size: 18px;
 		padding: 13px 20px;
 		border-radius: 25px;
 	}
-	.hero-intro .intro-title {
-		font-size: 20px;
-		padding: 16px 20px;
-		letter-spacing: -0.35px;
-		border-radius: 25px;
-		max-width: 400px;
-	}
-	.hero-intro .intro-title br {
-		display: none;
-	}
-	.resume-bubble {
-		font-size: 17px;
-		padding: 14px 20px !important;
-		max-width: 400px;
-	}
-	.hero-meta {
-		font-size: 10px;
-		margin-top: 20px;
-	}
-	.hero-visual {
-		order: 1;
-		height: 440px;
-		min-height: 440px;
-		width: 100%;
-		margin-top: 12px;
-	}
-	.experience {
-		left: auto;
-		right: 9%;
-		top: 20px;
-		z-index: 3;
-		gap: 9px;
-	}
-	.experience strong {
-		font-size: 32px;
-	}
-	.experience span {
-		font-size: 10px;
-	}
-	.hero-ornament {
-		top: -94px;
-		right: -22px;
-		width: 96px !important;
-		height: 225px !important;
-		opacity: 0.3 !important;
-	}
+
 	.section-next {
 		bottom: 25px;
 		left: auto;
@@ -1627,9 +1405,7 @@ textarea {
 		height: 48px;
 		z-index: 5;
 	}
-	.page-note {
-		display: none;
-	}
+
 	.content-page {
 		padding: 25px 26px 85px;
 		min-height: calc(100svh - 94px);
@@ -1967,22 +1743,6 @@ textarea {
 	}
 }
 @media (max-width: 359px) {
-	.hero-intro {
-		margin: 0 24px;
-	}
-	.hero-intro .intro-title {
-		font-size: 18px;
-	}
-	.resume-bubble {
-		font-size: 15px;
-	}
-	.hero-visual {
-		height: 390px;
-		min-height: 390px;
-	}
-	.experience {
-		right: 7%;
-	}
 	.dashboard-body {
 		padding: 20px 15px;
 	}

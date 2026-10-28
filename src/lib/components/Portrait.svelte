@@ -1,7 +1,7 @@
 <script lang="ts">
-let { compact = false }: { compact?: boolean } = $props();
+let { compact = false, home = false }: { compact?: boolean; home?: boolean } = $props();
 </script>
-<div class:compact class="portrait-scene">
+<div class:compact class:home class="portrait-scene">
 	<div class="arch arch-outer"></div>
 	<div class="arch arch-middle"></div>
 	<div class="arch arch-white"></div>
@@ -17,6 +17,9 @@ let { compact = false }: { compact?: boolean } = $props();
 	>
 	<span class="orb orb-one"></span><span class="orb orb-two"></span
 	><span class="orb orb-three"></span>
+	{#if home}
+		<span class="orb orb-four"></span>
+	{/if}
 </div>
 <style>
 .portrait-scene {
@@ -128,6 +131,121 @@ let { compact = false }: { compact?: boolean } = $props();
 		bottom: 45%;
 		width: 32px;
 		height: 32px;
+	}
+}
+/* Home uses the exported Figma asset at its native 850 × 585 proportions. */
+.home {
+	min-height: 0;
+	overflow: visible;
+}
+.home .portrait {
+	width: 59.027778cqw;
+	height: auto;
+	left: 0;
+	bottom: 0;
+	transform: none;
+}
+.home .arch-outer {
+	width: 64.583333cqw;
+	height: 64.583333cqw;
+	left: -3.333333cqw;
+	top: 10cqw;
+	bottom: auto;
+	transform: none;
+	border-radius: 50% 50% 0 0;
+}
+.home .arch-middle {
+	width: 41.666667cqw;
+	height: 41.666667cqw;
+	left: 8.333333cqw;
+	top: 21.458333cqw;
+	bottom: auto;
+	transform: none;
+}
+.home .arch-white {
+	width: 33.472222cqw;
+	height: 33.472222cqw;
+	left: 12.222222cqw;
+	top: 26.111111cqw;
+	bottom: auto;
+	transform: none;
+}
+.home .orb {
+	background: linear-gradient(110deg, #ffca05, #fffbd1);
+}
+.home .orb-one {
+	width: 2.430556cqw;
+	height: 2.430556cqw;
+	left: 16.875cqw;
+	top: 28.541667cqw;
+}
+.home .orb-two {
+	width: 3.958333cqw;
+	height: 3.958333cqw;
+	left: 9.791667cqw;
+	bottom: 11.180556cqw;
+}
+.home .orb-three {
+	width: 3.958333cqw;
+	height: 3.958333cqw;
+	left: 44.652778cqw;
+	right: auto;
+	bottom: -1.319444cqw;
+}
+.home .orb-four {
+	width: 2.430556cqw;
+	height: 2.430556cqw;
+	left: 38.958333cqw;
+	top: 23.402778cqw;
+}
+@media (max-width: 767px) {
+	.home .portrait {
+		width: 144.859813cqw;
+		left: -31.775701cqw;
+		bottom: 0;
+	}
+	.home .arch-outer {
+		width: 147.196262cqw;
+		height: 147.196262cqw;
+		left: -32.009346cqw;
+		top: auto;
+		bottom: -38.084112cqw;
+	}
+	.home .arch-middle {
+		width: 112.149533cqw;
+		height: 112.149533cqw;
+		left: -21.495327cqw;
+		top: auto;
+		bottom: -25.700935cqw;
+	}
+	.home .arch-white {
+		width: 84.11215cqw;
+		height: 84.11215cqw;
+		left: -8.878505cqw;
+		top: auto;
+		bottom: -10.514019cqw;
+	}
+	.home .orb-one {
+		width: 4.906542cqw;
+		height: 4.906542cqw;
+		left: 16.121495cqw;
+		top: auto;
+		bottom: 108.17757cqw;
+	}
+	.home .orb-two {
+		width: 8.17757cqw;
+		height: 8.17757cqw;
+		left: 11.214953cqw;
+		bottom: 68.925234cqw;
+	}
+	.home .orb-three {
+		width: 8.17757cqw;
+		height: 8.17757cqw;
+		left: 79.205607cqw;
+		bottom: 64.953271cqw;
+	}
+	.home .orb-four {
+		display: none;
 	}
 }
 </style>

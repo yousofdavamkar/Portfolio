@@ -5,6 +5,7 @@ import SceneGraphics from '#lib/components/SceneGraphics.svelte';
 import { PORTFOLIO, type PortfolioContext } from '#lib/state/portfolio.svelte.js';
 import { createProjectNavigation } from '#lib/state/project-navigation.js';
 import { PUBLIC_CONVEX_URL } from '$app/env/public';
+import { page } from '$app/state';
 import { api } from '../../../convex/_generated/api';
 import type { LayoutProps } from './$types';
 
@@ -53,7 +54,9 @@ onMount(() => {
 </script>
 <a class="skip-link" href="#main">Skip to content</a>
 <div class="site-shell">
-	<SceneGraphics />
+	{#if page.url.pathname !== '/'}
+		<SceneGraphics />
+	{/if}
 	<Header />
 	<main id="main">{@render children()}</main>
 	{#if !connected}
