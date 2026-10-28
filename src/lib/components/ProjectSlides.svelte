@@ -1,6 +1,7 @@
 <script lang="ts">
 import { ArrowDown, ArrowUp } from '@lucide/svelte';
-import MediaImage from '#lib/components/MediaImage.svelte';
+import Laptop from '#lib/components/Laptop.svelte';
+import ProjectScreen from '#lib/components/ProjectScreen.svelte';
 import { Button } from '#lib/components/ui/button/index.js';
 import { motionAllowed } from '#lib/motion/scene.js';
 import type { Project } from '#lib/state/portfolio.svelte.js';
@@ -18,6 +19,7 @@ const slides = $derived<Slide[]>([
 ]);
 let viewport = $state<HTMLElement>();
 let active = $state(0);
+const currentSlide = $derived(slides[active]);
 function go(index: number) {
 	const target = viewport?.children.item(Math.max(0, Math.min(index, slides.length - 1)));
 	if (!(target instanceof HTMLElement) || !viewport) return;
@@ -74,42 +76,41 @@ function keyboardSlider(node: HTMLElement) {
 	aria-label={`${project.title} screenshots and story`}
 	aria-roledescription="carousel"
 >
-	<section
-		class="slide-viewport"
-		bind:this={viewport}
-		use:keyboardSlider
-		onscroll={sync}
-		aria-label="Project slides. Scroll vertically to explore."
-	>
-		{#each slides as slide, index}
+	<div class="laptop-stage">
+		<Laptop sharedArt="project">
 			<section
-				class="detail-slide"
-				aria-roledescription="slide"
-				aria-label={`${index + 1} of ${slides.length}`}
+				class="slide-viewport"
+				bind:this={viewport}
+				use:keyboardSlider
+				onscroll={sync}
+				aria-label="Project slides. Scroll vertically to explore."
 			>
-				{#if slide.kind === 'image'}
-					<figure>
-						<MediaImage
-							src={slide.image}
-							alt={slide.caption || `${project.title} screenshot ${index}`}
-							width={612}
-							height={537}
-							loading={index === 0 ? 'eager' : 'lazy'}
-							{...index === 0 ? { sharedArt: 'project' } : {}}
-						/>
-						{#if index > 0 && slide.caption}
-							<figcaption>{slide.caption}</figcaption>
+				{#each slides as slide, index}
+					<section
+						class="detail-slide"
+						aria-roledescription="slide"
+						aria-label={`${index + 1} of ${slides.length}`}
+					>
+						{#if slide.kind === 'image'}
+							<ProjectScreen
+								src={slide.image}
+								alt={slide.caption || `${project.title} screenshot ${index}`}
+								loading={index === 0 ? 'eager' : 'lazy'}
+							/>
+						{:else}
+							<div class="story-slide">
+								<span class="eyebrow">Behind the project</span>
+								<p>{slide.text}</p>
+							</div>
 						{/if}
-					</figure>
-				{:else}
-					<div class="story-slide">
-						<span class="eyebrow">Behind the project</span>
-						<p>{slide.text}</p>
-					</div>
-				{/if}
+					</section>
+				{/each}
 			</section>
-		{/each}
-	</section>
+		</Laptop>
+		<p class="screen-caption" aria-live="polite">
+			{currentSlide?.kind === 'image' ? currentSlide.caption : 'Behind the project'}
+		</p>
+	</div>
 	{#if slides.length > 1}
 		<nav class="vertical-controls" aria-label="Project slide controls">
 			<Button
@@ -162,12 +163,12 @@ function keyboardSlider(node: HTMLElement) {
 }
 .slide-viewport {
 	position: relative;
-	height: clamp(360px, 62svh, 620px);
+	height: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
 	scroll-snap-type: y mandatory;
 	scrollbar-width: none;
-	border-radius: 20px;
+	overscroll-behavior-y: contain;
 }
 .slide-viewport::-webkit-scrollbar {
 	display: none;
@@ -181,29 +182,29 @@ function keyboardSlider(node: HTMLElement) {
 	scroll-snap-align: start;
 	scroll-snap-stop: always;
 	display: flex;
-	align-items: center;
+	align-items: stretch;
 	overflow: auto;
 }
-figure {
-	width: 100%;
-	margin: 0;
+.laptop-stage {
+	min-width: 0;
 }
-figcaption {
+.screen-caption {
+	min-height: 2.5em;
+	margin: 12px 0 0;
 	text-align: center;
 	color: var(--muted-foreground);
-	font-size: 13px;
-	padding: 14px 12px 0;
+	font-size: 12px;
 }
 .story-slide {
-	padding: clamp(20px, 3vw, 44px);
+	padding: 5cqw;
 	margin: auto;
 }
 .story-slide p {
 	white-space: pre-line;
-	color: #eee;
-	font-size: clamp(16px, 1.4vw, 22px);
+	color: #333;
+	font-size: clamp(14px, 3cqw, 20px);
 	line-height: 1.85;
-	margin-top: 24px;
+	margin-top: 12px;
 }
 .vertical-controls {
 	display: flex;
@@ -250,12 +251,8 @@ figcaption {
 	.project-slides {
 		gap: 8px;
 	}
-	.slide-viewport {
-		height: 390px;
-		max-height: 65svh;
-	}
 	.story-slide {
-		padding: 18px;
+		padding: 14px;
 	}
 }
 @media (prefers-reduced-motion: reduce) {

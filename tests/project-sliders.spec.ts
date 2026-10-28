@@ -154,3 +154,35 @@ test('interrupted detail transitions and browser history restore real artwork', 
 		'visible'
 	);
 });
+
+for (const width of [1440, 390]) {
+	test(`screenshots slide inside a stationary laptop at ${width}px`, async ({ page }) => {
+		await withProjects(page);
+		await page.setViewportSize({ width, height: 900 });
+		await page.goto('/work/elecode-iranzaminn', { waitUntil: 'networkidle' });
+		await expect(page.locator('.slide-count')).toHaveText('1 / 3');
+		const laptop = page.locator('#main .laptop');
+		const screen = page.locator('#main .laptop-screen');
+		const initialFrame = await laptop.boundingBox();
+		const initialScreen = await screen.boundingBox();
+		await page.getByRole('button', { name: 'Next detail slide', exact: true }).click();
+		await expect(page.locator('.slide-count')).toHaveText('2 / 3');
+		await expect
+			.poll(() =>
+				page
+					.locator('.slide-viewport')
+					.evaluate((node) => Math.abs(node.scrollTop - node.clientHeight))
+			)
+			.toBeLessThan(1);
+		expect(await laptop.boundingBox()).toEqual(initialFrame);
+		expect(await screen.boundingBox()).toEqual(initialScreen);
+		const screenshot = page.getByRole('img', { name: 'Fixture screenshot' });
+		const box = await screenshot.boundingBox();
+		if (!box || !initialScreen) throw new Error('Missing laptop screen');
+		for (const key of ['x', 'y', 'width', 'height'] as const)
+			expect(Math.abs(box[key] - initialScreen[key])).toBeLessThan(1);
+		await expect(screen).toHaveCSS('overflow', 'hidden');
+		await page.getByRole('button', { name: 'Previous detail slide', exact: true }).click();
+		await expect(page.locator('.slide-count')).toHaveText('1 / 3');
+	});
+}

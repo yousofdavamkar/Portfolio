@@ -13,7 +13,7 @@ for (const width of [1440, 1920]) {
 				(element) => element instanceof HTMLImageElement && element.naturalWidth > 0
 			)
 		).toBe(true);
-		const box = await image.boundingBox();
+		const box = await page.locator('.project-art .laptop').boundingBox();
 		if (!box) throw new Error('Missing showcase artwork');
 		const scale = width / 1440;
 		for (const [actual, expected] of [

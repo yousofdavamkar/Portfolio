@@ -1,7 +1,9 @@
 <script lang="ts">
 import { ArrowDown, ArrowLeft, ArrowRight, Pause, Play } from '@lucide/svelte';
 import { getContext, onMount } from 'svelte';
+import Laptop from '#lib/components/Laptop.svelte';
 import MediaImage from '#lib/components/MediaImage.svelte';
+import ProjectScreen from '#lib/components/ProjectScreen.svelte';
 import TransitionOrnament from '#lib/components/TransitionOrnament.svelte';
 import { Button } from '#lib/components/ui/button/index.js';
 import { carouselReveal } from '#lib/motion/carousel.js';
@@ -125,15 +127,15 @@ function move(step: number) {
 				class="project-art"
 				href={`/work/${project.slug}`}
 				aria-label={`View ${project.title}`}
-				><MediaImage
-					loading="eager"
-					src={project.image}
-					sharedArt="project"
-					alt={`${project.title} project preview`}
-					width={612}
-					height={537}
-				/></a
 			>
+				<Laptop sharedArt="project"
+					><ProjectScreen
+						src={project.image}
+						alt={`${project.title} project preview`}
+						loading="eager"
+					/></Laptop
+				>
+			</a>
 			<div data-reveal class="project-pagination">
 				<div class="arrow-buttons">
 					<Button

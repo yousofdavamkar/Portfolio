@@ -3,7 +3,7 @@ import { animate } from 'motion/mini';
 const travelEase = [0.42, 0, 0.2, 1] as const;
 const travelDuration = 1.05;
 
-type Artwork = HTMLImageElement | SVGSVGElement;
+type Artwork = HTMLElement | SVGSVGElement;
 
 function portraitClip(element: Artwork): string {
 	const frame = element.closest<HTMLElement>('.portrait-scene');
@@ -47,12 +47,16 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 		wrapper.style.cssText = `position:absolute;left:0;top:0;width:${rect.width}px;height:${rect.height}px;transform-origin:center;will-change:transform;opacity:${style.opacity};`;
 		wrapper.style.transform = `translate(${rect.x}px, ${rect.y}px) rotate(${angle}deg)`;
 		const image = source.cloneNode(true);
-		if (!(image instanceof SVGSVGElement || image instanceof HTMLImageElement)) return [];
-		image.removeAttribute('class');
+		if (!(image instanceof SVGSVGElement || image instanceof HTMLElement)) return [];
+		const composite = image instanceof HTMLElement && !(image instanceof HTMLImageElement);
+		if (!composite) image.removeAttribute('class');
+		for (const node of image.querySelectorAll('[id], [data-shared-art]')) {
+			node.removeAttribute('id');
+			node.removeAttribute('data-shared-art');
+		}
 		image.removeAttribute('data-shared-art');
 		image.removeAttribute('id');
-		image.style.cssText =
-			'display:block;position:static;width:100%;height:100%;max-width:none;transform:none;opacity:1;visibility:visible;';
+		image.style.cssText = `display:block;position:${composite ? 'relative' : 'static'};width:100%;height:100%;max-width:none;transform:none;opacity:1;visibility:visible;`;
 		image.style.objectFit = style.objectFit;
 		image.style.objectPosition = style.objectPosition;
 		image.style.stroke = style.stroke;
