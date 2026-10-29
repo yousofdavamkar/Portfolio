@@ -1,0 +1,3 @@
+# Run package scripts and their Node-shebang tools with Bun.
+[run]
+bun = true

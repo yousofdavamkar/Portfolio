@@ -13,7 +13,7 @@ export default defineConfig({
 		trace: 'retain-on-failure'
 	},
 	webServer: {
-		command: 'npm run dev -- --host 127.0.0.1 --port 5180 --strictPort',
+		command: 'bun run dev --host 127.0.0.1 --port 5180 --strictPort',
 		url: 'http://127.0.0.1:5180',
 		reuseExistingServer: !process.env['CI']
 	}

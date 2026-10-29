@@ -5,19 +5,20 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "npm run lint && npm run check && vite build",
+		"build": "bun run lint && bun run check && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsgo --tsconfig ./tsconfig.json && npm run check:backend",
+		"check": "svelte-kit sync && svelte-check --tsgo --tsconfig ./tsconfig.json && bun run check:backend",
 		"check:watch": "svelte-kit sync && svelte-check --tsgo --tsconfig ./tsconfig.json --watch",
-		"check:backend": "npm run tsc -- --project convex/tsconfig.json --noEmit",
+		"check:backend": "bun run tsc --project convex/tsconfig.json --noEmit",
 		"lint": "biome check --error-on-warnings .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
 		"format:check": "biome format .",
-		"setup:dev": "node scripts/provision-dev.ts",
-		"tsc": "node node_modules/@typescript/native/bin/tsc",
-		"test:e2e": "playwright test"
+		"setup:dev": "bun scripts/provision-dev.ts",
+		"tsc": "bun node_modules/@typescript/native/bin/tsc",
+		"test:e2e": "playwright test",
+		"start": "bun build/index.js"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.6.3",
@@ -59,6 +60,8 @@
 		"zustand": "^5.0.16"
 	},
 	"engines": {
-		"node": ">=22.18.0"
-	}
+		"node": ">=22.18.0",
+		"bun": ">=1.4.4"
+	},
+	"packageManager": "bun@1.4.4"
 }

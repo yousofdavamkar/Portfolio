@@ -9,7 +9,7 @@ const secret = get('CONTACT_SECRET') || randomBytes(32).toString('hex');
 const email = get('STUDIO_EMAIL') || 'owner@portfolio.local';
 const password = get('STUDIO_PASSWORD') || randomBytes(24).toString('base64url');
 function run(args: string[]): void {
-	const r = spawnSync('npx', ['convex', ...args], { encoding: 'utf8' });
+	const r = spawnSync('bun', ['x', '--bun', 'convex', ...args], { encoding: 'utf8' });
 	if (r.status !== 0) {
 		throw new Error('Convex setup failed. Check deployment access.');
 	}

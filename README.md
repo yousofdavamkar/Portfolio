@@ -12,14 +12,16 @@ A responsive SvelteKit portfolio and authenticated content studio, based on the 
 
 ## Run locally
 
+Install dependencies from the committed `bun.lock`; use `bun add` and `bun remove` to change them. The lockfile preserves the versions from the previous npm install. See [Bun’s lockfile migration](https://bun.sh/docs/pm/lockfile#automatic-lockfile-migration) and [runtime configuration](https://bun.sh/docs/runtime/bunfig#run-bun-auto-alias-node-to-bun).
+
 ```sh
-npm ci
-npx convex dev --configure
-npx @convex-dev/auth --skip-git-check --web-server-url http://localhost:5173
-npm run setup:dev
-npx convex dev --once
-npx convex run portfolio:seed '{}'
-npm run dev
+bun install --frozen-lockfile
+bunx --bun convex dev --configure
+bunx --bun @convex-dev/auth --skip-git-check --web-server-url http://localhost:5173
+bun run setup:dev
+bunx --bun convex dev --once
+bunx --bun convex run portfolio:seed '{}'
+bun run dev
 ```
 
 Choose your own Convex development project during configuration. Set `PUBLIC_CONVEX_URL` in `.env.local` to its cloud URL. The provisioning script sets the server-only contact secret in both Convex and `.env.local`, creates a development administrator, and saves the generated login there as `STUDIO_EMAIL` and `STUDIO_PASSWORD`. Never commit that file. The existing local environment is already configured.
@@ -28,21 +30,21 @@ Visit `/login` to access `/dashboard`. The studio manages profile text, skills, 
 
 ## Checks and production
 
-Use Node.js 22.18 or newer. Development takes place on `develop`; `main` is reserved for production. Deployment automation will be configured when Vercel is connected.
+Use Bun **1.4.4**, pinned in `.bun-version` and `packageManager`. The local `bunfig.toml` makes Bun the runtime for package scripts and their Node-shebang tools. Development takes place on `develop`; `main` is reserved for production. Deployment automation will be configured when Vercel is connected.
 
 ```sh
-npm run lint
-npm run check
-npm run build
+bun run lint
+bun run check
+bun run build
 ```
 
-`build` runs Biome and the TypeScript checks before Vite builds the application. TypeScript **7.0.2** is installed as `@typescript/native`; `npm run tsc` explicitly uses its native compiler, and `svelte-check --tsgo` uses it for Svelte diagnostics. The explicit compiler path prevents npm’s transitive TypeScript 6 binary from taking precedence. TypeScript 6 remains installed under the `typescript` name for the JavaScript compiler API used by SvelteKit and Svelte's tooling. This follows [Svelte's supported TypeScript 7 setup](https://github.com/sveltejs/language-tools/blob/master/packages/svelte-check/README.md#typescript-7-supports).
+`build` runs Biome and the TypeScript checks before Vite builds the application. TypeScript **7.0.2** is installed as `@typescript/native`; `bun run tsc` explicitly uses its native compiler, and `svelte-check --tsgo` uses it for Svelte diagnostics. The explicit compiler path prevents the transitive TypeScript 6 binary from taking precedence. TypeScript 6 remains installed under the `typescript` name for the JavaScript compiler API used by SvelteKit and Svelte's tooling. This follows [Svelte's supported TypeScript 7 setup](https://github.com/sveltejs/language-tools/blob/master/packages/svelte-check/README.md#typescript-7-supports).
 
 `tsconfig.strict.json` applies to the frontend, maintained scripts, and Convex. It enables strict checking, exact optional properties, checked indexed access, explicit index-signature access, unused-code checks, return-path checks, and erasable TypeScript syntax. App-owned code is TypeScript, including `scripts/provision-dev.ts`; Convex-generated JavaScript and declarations remain generator-managed. Third-party declarations use `skipLibCheck`. Convex Auth's published optional-field types are re-inferred from its validators in `convex/schema.ts` without changing runtime tables or indexes.
 
-Biome **2.6.3** handles formatting, import organization, and linting, with errors for explicit `any`, non-null assertions, and `@ts-ignore`. Use `npm run format`, `npm run format:check`, or `npm run lint:fix`. Generated files, build output, and the npm lockfile are excluded. Full Svelte formatting and linting are [experimental in Biome](https://biomejs.dev/introduction/language-support/#html-super-languages-support); Svelte's compiler also checks templates and accessibility. The existing global stylesheet's specificity and `!important` overrides are retained, including reduced-motion overrides. The shared editor settings enable Biome formatting and fixes on save.
+Biome **2.6.3** handles formatting, import organization, and linting, with errors for explicit `any`, non-null assertions, and `@ts-ignore`. Use `bun run format`, `bun run format:check`, or `bun run lint:fix`. Generated files, build output, and the Bun lockfile are excluded. Full Svelte formatting and linting are [experimental in Biome](https://biomejs.dev/introduction/language-support/#html-super-languages-support); Svelte's compiler also checks templates and accessibility. The existing global stylesheet's specificity and `!important` overrides are retained, including reduced-motion overrides. The shared editor settings enable Biome formatting and fixes on save.
 
-The Node adapter writes `build/`. Configure a production Convex deployment, its authentication keys and `SITE_URL`, a matching server-only `CONTACT_SECRET`, and `PUBLIC_CONVEX_URL` before building for production. Run `node build` behind HTTPS with the correct `ORIGIN`; production cookies are Secure. Provision the administrator privately for that deployment. Do not reuse development credentials.
+The existing SvelteKit Node-compatible adapter writes `build/`, which the start script runs with Bun. Configure a production Convex deployment, its authentication keys and `SITE_URL`, a matching server-only `CONTACT_SECRET`, and `PUBLIC_CONVEX_URL` before building for production. Run `bun run start` behind HTTPS with the correct `ORIGIN`; production cookies are Secure. Provision the administrator privately for that deployment. Do not reuse development credentials.
 
 ## Design and accessibility
 
@@ -60,4 +62,4 @@ The [shadcn-svelte Skeleton](https://www.shadcn-svelte.com/docs/components/skele
 
 The router retains normal history, focus, and scroll behavior. Reduced-motion preferences and keyboard navigation skip decorative transitions. Animation cleanup restores the page's original styles, and a bounded timeout prevents an outgoing animation from blocking navigation. Scroll reveals start after the page transition finishes, without replaying an entrance animation. Authentication and dashboard routes do not animate.
 
-Run `npm run test:e2e` for browser regressions covering rapid clicks during both transition phases, next-page links, history, keyboard cancellation, reduced motion, the removed theme picker, and mobile navigation. The tests start a local development server on port 5180 when one is not already running.
+Run `bun run test:e2e` for browser regressions covering rapid clicks during both transition phases, next-page links, history, keyboard cancellation, reduced motion, the removed theme picker, and mobile navigation. The tests start a local development server on port 5180 when one is not already running.
