@@ -1,7 +1,7 @@
 <script lang="ts">
 import { animate } from 'motion/mini';
 import { flushSync, onMount } from 'svelte';
-import { capturePageSlide, pageSlideDuration } from '#lib/motion/page-slide.js';
+import { capturePageSlide } from '#lib/motion/page-slide.js';
 import { animateScene, easeOut, motionAllowed } from '#lib/motion/scene.js';
 import { captureSharedArt } from '#lib/motion/shared-art.js';
 import { afterNavigate, beforeNavigate, onNavigate } from '$app/navigation';
@@ -60,6 +60,8 @@ onNavigate((navigation) => {
 	const aboutSlide = fromChapter === 1 && toChapter === 1;
 	const aboutPortfolio =
 		(fromChapter === 1 && to === '/work') || (from === '/work' && toChapter === 1);
+	const portfolioContact =
+		(fromChapter === 2 && to === '/contact') || (from === '/contact' && toChapter === 2);
 	const projectDetail =
 		(from === '/work' && to.startsWith('/work/')) || (from.startsWith('/work/') && to === '/work');
 	const shared =
@@ -77,10 +79,18 @@ onNavigate((navigation) => {
 			? navigation.delta < 0
 				? 1
 				: -1
-			: to === '/about' || to === '/work'
-				? 1
-				: -1;
-	const slide = aboutSlide || projectDetail ? capturePageSlide(main, slideDirection) : undefined;
+			: portfolioContact
+				? toChapter < fromChapter
+					? 1
+					: -1
+				: to === '/about' || to === '/work'
+					? 1
+					: -1;
+	const slide = portfolioContact
+		? capturePageSlide(main, slideDirection, 0.85)
+		: aboutSlide || projectDetail
+			? capturePageSlide(main, slideDirection)
+			: undefined;
 	const current = generation;
 	let preview: HTMLElement | null = null;
 	let previewOpacity = '';
@@ -175,7 +185,7 @@ onNavigate((navigation) => {
 								: [`translateY(${shared ? 0 : direction * 24}px)`, 'translateY(0px)']
 						},
 						{
-							duration: slide ? pageSlideDuration : shared ? 0.46 : 0.32,
+							duration: slide ? slide.duration : shared ? 0.46 : 0.32,
 							ease: shared && !slide ? 'easeInOut' : easeOut
 						}
 					);

@@ -68,3 +68,53 @@ test('reduced motion skips the View Details slideshow', async ({ page }) => {
 	await expect(page.locator('#main')).toHaveCSS('transform', 'none');
 	await expect(page.locator('#main .laptop')).toHaveCSS('visibility', 'visible');
 });
+
+for (const width of [1440, 390]) {
+	test(`Portfolio and Contact slide smoothly in both directions at ${width}px`, async ({
+		page
+	}) => {
+		await page.setViewportSize({ width, height: 900 });
+		await page.goto('/work', { waitUntil: 'networkidle' });
+		if (width < 768) {
+			await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
+			await page
+				.getByRole('navigation', { name: 'Mobile navigation' })
+				.getByRole('link', { name: 'Contact me' })
+				.click();
+		} else {
+			await page.locator('.work-page .section-next').click();
+		}
+		await inspectSlide(page, '/contact', -1);
+		await expect(page.locator('.site-header')).toHaveCSS('transform', 'none');
+		await expect(page.getByRole('button', { name: 'Hire Me!', exact: true })).toBeVisible();
+		expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+			true
+		);
+		await page.goBack();
+		await inspectSlide(page, '/work', 1);
+		await page.goForward();
+		await inspectSlide(page, '/contact', -1);
+	});
+}
+
+test('Contact navigation cleans up when interrupted and skips motion when requested', async ({
+	page
+}) => {
+	await page.goto('/work', { waitUntil: 'networkidle' });
+	await page.locator('.work-page .section-next').click();
+	await expect(page.locator('[data-page-slide-layer]')).toHaveCount(1);
+	await page
+		.getByRole('navigation', { name: 'Main navigation', exact: true })
+		.getByRole('link', { name: 'Home', exact: true })
+		.click();
+	await expect(page).toHaveURL('/');
+	await expect(page.locator('[data-page-slide-layer], [data-shared-art-layer]')).toHaveCount(0);
+	await expect(page.locator('#main')).toHaveCSS('opacity', '1');
+	await expect(page.locator('#main')).toHaveCSS('transform', 'none');
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	await page.goto('/work', { waitUntil: 'networkidle' });
+	await page.locator('.work-page .section-next').click();
+	await expect(page).toHaveURL('/contact');
+	await expect(page.locator('[data-page-slide-layer]')).toHaveCount(0);
+	await expect(page.locator('#main')).toHaveCSS('transform', 'none');
+});

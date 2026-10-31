@@ -4,7 +4,11 @@ import { easeOut } from './scene.js';
 export const pageSlideDuration = 0.48;
 
 /** Keep the outgoing composition visible while the next route slides alongside it. */
-export function capturePageSlide(main: HTMLElement, direction: 1 | -1) {
+export function capturePageSlide(
+	main: HTMLElement,
+	direction: 1 | -1,
+	duration = pageSlideDuration
+) {
 	const bounds = main.getBoundingClientRect();
 	const distance = bounds.width * direction;
 	const layer = document.createElement('div');
@@ -35,11 +39,12 @@ export function capturePageSlide(main: HTMLElement, direction: 1 | -1) {
 	};
 	return {
 		distance,
+		duration,
 		play() {
 			animation = animate(
 				outgoing,
 				{ transform: ['translate3d(0, 0, 0)', `translate3d(${distance}px, 0, 0)`] },
-				{ duration: pageSlideDuration, ease: easeOut }
+				{ duration, ease: easeOut }
 			);
 			return Promise.resolve(animation).then(cancel);
 		},
