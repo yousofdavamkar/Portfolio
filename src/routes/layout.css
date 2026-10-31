@@ -354,7 +354,7 @@ textarea {
 	padding: 14px 28px;
 	margin: 0 0 40px;
 }
-.section-label span {
+.section-label > span[aria-hidden="true"] {
 	margin-left: 9px;
 }
 .body-copy {

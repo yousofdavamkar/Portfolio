@@ -365,7 +365,7 @@ function move(step: number) {
 		line-height: 1.5;
 		border-radius: 3.472222cqw;
 	}
-	.section-label span {
+	.section-label .portfolio-emoji {
 		font-size: 2.222222cqw;
 		line-height: 1;
 		vertical-align: middle;

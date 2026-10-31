@@ -1,7 +1,7 @@
 <script lang="ts">
 import { animate } from 'motion/mini';
 import { flushSync, onMount } from 'svelte';
-import { capturePageSlide } from '#lib/motion/page-slide.js';
+import { capturePageSlide, pageSlideDuration } from '#lib/motion/page-slide.js';
 import { animateScene, easeOut, motionAllowed } from '#lib/motion/scene.js';
 import { captureSharedArt } from '#lib/motion/shared-art.js';
 import { afterNavigate, beforeNavigate, onNavigate } from '$app/navigation';
@@ -67,30 +67,27 @@ onNavigate((navigation) => {
 	const shared =
 		(from === '/' && to === '/about') || (from === '/about' && to === '/')
 			? captureSharedArt(main)
-			: projectDetail
-				? captureSharedArt(main, { backdrop: false })
-				: aboutPortfolio
-					? captureSharedArt(main, { artwork: 'ornament' })
-					: aboutSlide
-						? captureSharedArt(main, { artwork: 'ornament', backdrop: false })
-						: undefined;
+			: portfolioContact
+				? captureSharedArt(main, {
+						artwork: to === '/contact' ? 'ornament' : 'contact',
+						replacement: to === '/contact' ? 'contact' : 'ornament'
+					})
+				: projectDetail
+					? captureSharedArt(main, { backdrop: false })
+					: aboutPortfolio
+						? captureSharedArt(main, { artwork: 'ornament' })
+						: aboutSlide
+							? captureSharedArt(main, { artwork: 'ornament', backdrop: false })
+							: undefined;
 	const slideDirection =
 		navigation.type === 'popstate' && navigation.delta
 			? navigation.delta < 0
 				? 1
 				: -1
-			: portfolioContact
-				? toChapter < fromChapter
-					? 1
-					: -1
-				: to === '/about' || to === '/work'
-					? 1
-					: -1;
-	const slide = portfolioContact
-		? capturePageSlide(main, slideDirection, 0.85, 'y')
-		: aboutSlide || projectDetail
-			? capturePageSlide(main, slideDirection)
-			: undefined;
+			: to === '/about' || to === '/work'
+				? 1
+				: -1;
+	const slide = aboutSlide || projectDetail ? capturePageSlide(main, slideDirection) : undefined;
 	const current = generation;
 	let preview: HTMLElement | null = null;
 	let previewOpacity = '';
@@ -148,7 +145,7 @@ onNavigate((navigation) => {
 				outgoing?.cancel();
 				restore();
 				shared?.hideDestination();
-				if (fromChapter === 1 && to === '/work') {
+				if ((fromChapter === 1 || from === '/contact') && to === '/work') {
 					const candidate = main.querySelector<HTMLElement>('[data-after-ornament]');
 					if (candidate?.offsetWidth) {
 						preview = candidate;
@@ -181,11 +178,11 @@ onNavigate((navigation) => {
 						{
 							opacity: slide ? [1, 1] : [0, 1],
 							transform: slide
-								? [slide.incomingTransform, 'translate3d(0, 0, 0)']
+								? [`translate3d(${-slide.distance}px, 0, 0)`, 'translate3d(0, 0, 0)']
 								: [`translateY(${shared ? 0 : direction * 24}px)`, 'translateY(0px)']
 						},
 						{
-							duration: slide ? slide.duration : shared ? 0.46 : 0.32,
+							duration: slide ? pageSlideDuration : shared ? 0.46 : 0.32,
 							ease: shared && !slide ? 'easeInOut' : easeOut
 						}
 					);

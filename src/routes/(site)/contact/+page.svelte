@@ -152,6 +152,7 @@ const profile = $derived(portfolio.content.profile);
 	<div data-reveal class="contact-illustration" aria-hidden="true">
 		<MediaImage
 			class="contact-artwork"
+			sharedArt="contact"
 			src="/images/contact-art.png"
 			alt=""
 			width={1277}

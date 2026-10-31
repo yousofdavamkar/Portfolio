@@ -13,7 +13,11 @@ function portraitClip(element: Artwork): string {
 	return `inset(${(Math.max(0, bounds.top - image.top) / image.height) * 100}% ${(Math.max(0, image.right - bounds.right) / image.width) * 100}% ${(Math.max(0, image.bottom - bounds.bottom) / image.height) * 100}% ${(Math.max(0, bounds.left - image.left) / image.width) * 100}%)`;
 }
 
-type SharedArtOptions = { artwork?: 'ornament' | 'project'; backdrop?: boolean };
+type SharedArtOptions = {
+	artwork?: 'ornament' | 'project' | 'contact';
+	replacement?: 'ornament' | 'contact';
+	backdrop?: boolean;
+};
 
 /** Detached artwork survives either a page crossfade or a horizontal slideshow. */
 export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = {}) {
@@ -98,7 +102,9 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 	return {
 		hideDestination() {
 			for (const { name } of items) {
-				const target = document.querySelector<Artwork>(`[data-shared-art="${name}"]`);
+				const target = document.querySelector<Artwork>(
+					`#main [data-shared-art="${options.replacement ?? name}"]`
+				);
 				if (target) hide(target);
 			}
 		},
@@ -109,7 +115,9 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 				void fade.then(() => backdrop?.remove());
 			}
 			for (const item of items) {
-				const target = document.querySelector<Artwork>(`[data-shared-art="${item.name}"]`);
+				const target = document.querySelector<Artwork>(
+					`#main [data-shared-art="${options.replacement ?? item.name}"]`
+				);
 				if (!target) {
 					item.wrapper.remove();
 					continue;
@@ -119,6 +127,34 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 					animations.push(animate(item.wrapper, { opacity: 0 }, { duration: 0.3 }));
 					continue;
 				}
+				if (options.replacement) {
+					// Different chapter artwork shares the same journey, dissolving as it lands.
+					const destination = target.cloneNode(true);
+					if (destination instanceof SVGSVGElement || destination instanceof HTMLImageElement) {
+						const targetStyle = getComputedStyle(target);
+						destination.removeAttribute('class');
+						destination.removeAttribute('id');
+						destination.removeAttribute('data-shared-art');
+						destination.setAttribute('data-art-replacement', '');
+						destination.style.cssText =
+							'position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;opacity:0;visibility:visible;transform:none;object-fit:fill;';
+						destination.style.stroke = targetStyle.stroke;
+						destination.style.strokeWidth = targetStyle.strokeWidth;
+						item.wrapper.append(destination);
+						animations.push(
+							animate(
+								item.image,
+								{ opacity: [1, 0] },
+								{ duration: 0.65, delay: 0.12, ease: travelEase }
+							),
+							animate(
+								destination,
+								{ opacity: [0, 1] },
+								{ duration: 0.7, delay: 0.25, ease: travelEase }
+							)
+						);
+					}
+				}
 				const angle = Number(target.dataset['artAngle'] ?? 0);
 				const scaleX = end.width / item.rect.width;
 				const scaleY = end.height / item.rect.height;
@@ -126,9 +162,10 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 				const x = end.x + (end.width - item.rect.width) / 2;
 				const y = end.y + (end.height - item.rect.height) / 2;
 				const ornament = item.name === 'ornament';
-				const bendDistance = ornament
-					? Math.min(35, Math.hypot(end.x - item.rect.x, end.y - item.rect.y) * 0.08)
-					: 0;
+				const bendDistance =
+					ornament || options.replacement
+						? Math.min(35, Math.hypot(end.x - item.rect.x, end.y - item.rect.y) * 0.08)
+						: 0;
 				// Sample a continuous arc rather than two straight segments meeting at a corner.
 				// One easing curve drives position, rotation and scale for the entire journey.
 				const transforms = Array.from({ length: 61 }, (_, index) => {
@@ -149,7 +186,7 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 						{ duration: travelDuration, ease: travelEase }
 					)
 				);
-				if (ornament)
+				if (ornament && !options.replacement)
 					animations.push(
 						animate(
 							item.image,
