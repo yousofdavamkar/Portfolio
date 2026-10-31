@@ -56,6 +56,7 @@ onMount(() => {
 <div class="site-shell">
 	{#if page.url.pathname !== '/' &&
 		page.url.pathname !== '/work' &&
+		page.url.pathname !== '/contact' &&
 		!page.url.pathname.startsWith('/about')}
 		<SceneGraphics />
 	{/if}
