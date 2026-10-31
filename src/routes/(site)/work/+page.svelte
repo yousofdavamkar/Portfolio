@@ -1,10 +1,11 @@
 <script lang="ts">
 import { ArrowDown, ArrowLeft, ArrowRight, Pause, Play } from '@lucide/svelte';
-import { getContext, onMount } from 'svelte';
+import { getContext, onMount, untrack } from 'svelte';
 import Laptop from '#lib/components/Laptop.svelte';
 import MediaImage from '#lib/components/MediaImage.svelte';
 import ProjectScreen from '#lib/components/ProjectScreen.svelte';
 import TransitionOrnament from '#lib/components/TransitionOrnament.svelte';
+import TypedText from '#lib/components/TypedText.svelte';
 import { Button } from '#lib/components/ui/button/index.js';
 import { carouselReveal } from '#lib/motion/carousel.js';
 import { PORTFOLIO, type PortfolioContext } from '#lib/state/portfolio.svelte.js';
@@ -33,6 +34,19 @@ let hovered = $state(false);
 let focused = $state(false);
 let hidden = $state(true);
 let reduced = $state(true);
+let mounted = $state(false);
+let keyboard = $state(false);
+let labelLetters = $state(0);
+let titleLetters = $state(0);
+let summaryLetters = $state(0);
+let typingComplete = $state(false);
+let labelFinished = false;
+const label = 'Portfolio';
+const projectTitle = $derived(project?.title ?? '');
+const projectSummary = $derived(project?.summary ?? '');
+const projectSlug = $derived(project?.slug ?? '');
+const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+
 const playing = $derived(
 	projects.length > 1 && !paused && !hovered && !focused && !hidden && !reduced && !navigating.to
 );
@@ -46,12 +60,69 @@ onMount(() => {
 	};
 	syncPreference();
 	syncVisibility();
+	keyboard = document.documentElement.dataset['input'] === 'keyboard';
+	mounted = true;
+	const finishTyping = () => {
+		keyboard = true;
+	};
+	window.addEventListener('keydown', finishTyping);
 	preference.addEventListener('change', syncPreference);
 	document.addEventListener('visibilitychange', syncVisibility);
 	return () => {
+		window.removeEventListener('keydown', finishTyping);
 		preference.removeEventListener('change', syncPreference);
 		document.removeEventListener('visibilitychange', syncVisibility);
 	};
+});
+$effect(() => {
+	// Track the copy and identity, so filtering and carousel changes restart only project text.
+	const title = projectTitle;
+	const summary = projectSummary;
+	const slug = projectSlug;
+	if (!mounted) return;
+	const finish = () => {
+		labelFinished = true;
+		labelLetters = Infinity;
+		titleLetters = Infinity;
+		summaryLetters = Infinity;
+		typingComplete = true;
+	};
+	if (reduced || hidden || keyboard) {
+		finish();
+		return;
+	}
+	const typeLabel = untrack(() => !labelFinished);
+	const titleLength = Array.from(segmenter.segment(title)).length;
+	const summaryLength = Array.from(segmenter.segment(summary)).length;
+	const labelStart = 120;
+	const labelEnd = typeLabel ? labelStart + label.length * 40 : 0;
+	const titleStart = labelEnd + 120;
+	const titleDuration = Math.min(titleLength * 28, 700);
+	const summaryStart = titleStart + titleDuration + 100;
+	const summaryDuration = Math.min(summaryLength * 18, 1500);
+	labelLetters = typeLabel ? 0 : Infinity;
+	titleLetters = 0;
+	summaryLetters = 0;
+	typingComplete = false;
+	const started = performance.now();
+	let frame = 0;
+	const count = (elapsed: number, start: number, duration: number, length: number) =>
+		elapsed < start
+			? 0
+			: duration === 0
+				? length
+				: Math.min(length, Math.floor(((elapsed - start) / duration) * length));
+	const tick = (now: number) => {
+		const elapsed = now - started;
+		if (typeLabel) labelLetters = count(elapsed, labelStart, label.length * 40, label.length);
+		if (elapsed >= labelEnd) labelFinished = true;
+		titleLetters = count(elapsed, titleStart, titleDuration, titleLength);
+		summaryLetters = count(elapsed, summaryStart, summaryDuration, summaryLength);
+		if (elapsed >= (slug ? summaryStart + summaryDuration : labelEnd)) finish();
+		else frame = requestAnimationFrame(tick);
+	};
+	frame = requestAnimationFrame(tick);
+	return () => cancelAnimationFrame(frame);
 });
 $effect(() => {
 	// A complete reading interval starts again after every manual or automatic change.
@@ -78,6 +149,7 @@ function move(step: number) {
 >
 <section
 	class="work-page content-page"
+	class:typing-complete={typingComplete}
 	aria-label="Portfolio projects"
 	aria-roledescription="carousel"
 	onpointerenter={(event) => {
@@ -93,8 +165,14 @@ function move(step: number) {
 			focused = false;
 	}}
 >
-	<h1 data-reveal class="speech section-label speech-tail">
-		Portfolio <span aria-hidden="true">👨🏻‍💻</span>
+	<h1 class="speech section-label speech-tail">
+		<TypedText text={label} visible={labelLetters} />
+		<span
+			class="portfolio-emoji"
+			class:emoji-visible={labelLetters >= label.length}
+			aria-hidden="true"
+			>👨🏻‍💻</span
+		>
 	</h1>
 	{#if categories.length > 2}
 		<fieldset class="work-filters" aria-label="Filter projects">
@@ -113,10 +191,10 @@ function move(step: number) {
 	{/if}
 	{#if project}
 		<div class="project-showcase">
-			<div data-reveal class="project-copy" aria-live={playing ? 'off' : 'polite'}>
-				<div use:carouselReveal={{ key: project.slug, direction }}>
-					<h2>{project.title}</h2>
-					<p class="body-copy">{project.summary}</p>
+			<div class="project-copy" aria-live={playing ? 'off' : 'polite'}>
+				<div>
+					<h2><TypedText text={project.title} visible={titleLetters} /></h2>
+					<p class="body-copy"><TypedText text={project.summary} visible={summaryLetters} /></p>
 					<Button href={`/work/${project.slug}`} variant="outline" class="pill-action"
 						>View Details <ArrowRight size={24} /></Button
 					>
@@ -213,6 +291,18 @@ function move(step: number) {
 </section>
 
 <style>
+.portfolio-emoji {
+	visibility: hidden;
+}
+.portfolio-emoji.emoji-visible {
+	visibility: visible;
+}
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+	.portfolio-emoji {
+		visibility: visible;
+	}
+}
+
 .project-pagination :global(.autoplay-control) {
 	font-size: 12px;
 	color: var(--muted-foreground);

@@ -85,26 +85,26 @@ test('autoplay advances, wraps, pauses on interaction and filters to one project
 	await withProjects(page);
 	await page.clock.install();
 	await page.goto('/work', { waitUntil: 'networkidle' });
-	await expect(page.locator('.project-copy h2')).toHaveText('Fixture Alpha');
+	await expect(page.locator('.project-copy h2')).toHaveAccessibleName('Fixture Alpha');
 	await page.mouse.move(1, 1);
 	await page.clock.fastForward(6100);
-	await expect(page.locator('.project-copy h2')).toHaveText('Fixture Beta');
+	await expect(page.locator('.project-copy h2')).toHaveAccessibleName('Fixture Beta');
 	await page.clock.fastForward(6100);
-	await expect(page.locator('.project-copy h2')).toHaveText('Fixture Gamma');
+	await expect(page.locator('.project-copy h2')).toHaveAccessibleName('Fixture Gamma');
 	await page.clock.fastForward(6100);
-	await expect(page.locator('.project-copy h2')).toHaveText('Fixture Alpha');
+	await expect(page.locator('.project-copy h2')).toHaveAccessibleName('Fixture Alpha');
 	await page.locator('.project-art').hover();
 	await page.clock.fastForward(12000);
-	await expect(page.locator('.project-copy h2')).toHaveText('Fixture Alpha');
+	await expect(page.locator('.project-copy h2')).toHaveAccessibleName('Fixture Alpha');
 	await page.getByRole('button', { name: 'Pause project slideshow' }).click();
 	await page.mouse.move(1, 1);
 	await page
 		.getByRole('button', { name: 'Play project slideshow' })
 		.evaluate((node) => node.blur());
 	await page.clock.fastForward(12000);
-	await expect(page.locator('.project-copy h2')).toHaveText('Fixture Alpha');
+	await expect(page.locator('.project-copy h2')).toHaveAccessibleName('Fixture Alpha');
 	await page.getByRole('button', { name: 'Next project', exact: true }).click();
-	await expect(page.locator('.project-copy h2')).toHaveText('Fixture Beta');
+	await expect(page.locator('.project-copy h2')).toHaveAccessibleName('Fixture Beta');
 	await page.getByRole('button', { name: 'Web development', exact: true }).click();
 	await expect(page.locator('.project-number')).toHaveAttribute('aria-label', 'Project 1 of 1');
 	await expect(page.getByRole('button', { name: 'Next project', exact: true })).toBeDisabled();
@@ -116,10 +116,10 @@ test('reduced motion disables autoplay and gallery screenshots stay within the c
 	await withProjects(page);
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.goto('/work', { waitUntil: 'networkidle' });
-	await expect(page.locator('.project-copy h2')).toHaveText('Fixture Alpha');
+	await expect(page.locator('.project-copy h2')).toHaveAccessibleName('Fixture Alpha');
 	await page.clock.install();
 	await page.clock.fastForward(18000);
-	await expect(page.locator('.project-copy h2')).toHaveText('Fixture Alpha');
+	await expect(page.locator('.project-copy h2')).toHaveAccessibleName('Fixture Alpha');
 	await expect(page.getByRole('button', { name: 'Pause project slideshow' })).toHaveCount(0);
 	await page.getByRole('link', { name: 'View Details', exact: true }).click();
 	await settled(page);
