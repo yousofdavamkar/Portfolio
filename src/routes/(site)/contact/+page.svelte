@@ -147,3 +147,123 @@ const profile = $derived(portfolio.content.profile);
 		</div>
 	</div>
 </section>
+
+<style>
+.contact-page {
+	--contact-header-height: 120px;
+	min-height: calc(100svh - var(--contact-header-height));
+	display: flex;
+	flex-direction: column;
+	padding-block: clamp(12px, 2.5svh, 28px);
+}
+.section-label {
+	flex: none;
+	align-self: flex-start;
+	margin-bottom: clamp(12px, 2svh, 24px);
+}
+.contact-grid {
+	flex: 1;
+	width: 100%;
+	align-items: center;
+}
+.contact-copy {
+	align-self: stretch;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+.contact-copy h2 {
+	font-size: clamp(32px, 5svh, 54px);
+	margin: 16px 0;
+}
+.social-links {
+	margin: 18px 0;
+}
+.contact-copy :global(.contact-art) {
+	width: clamp(140px, calc(100svh - 530px), 330px);
+	max-width: 75%;
+	margin: 0 0 0 auto;
+	flex: none;
+}
+.contact-form-panel {
+	align-self: center;
+	width: 100%;
+	padding: clamp(16px, 2.5svh, 28px) clamp(20px, 2.4vw, 34px);
+}
+.form-description {
+	margin: 6px 0 16px;
+}
+.field {
+	gap: 6px;
+	margin-bottom: 12px;
+}
+.field :global(input) {
+	min-height: 44px;
+	height: 44px;
+	padding-block: 10px;
+}
+.field :global(textarea) {
+	min-height: 80px;
+	height: clamp(80px, 12svh, 110px);
+}
+.privacy-note {
+	margin-top: 12px;
+}
+@media (max-width: 1100px) {
+	.contact-page {
+		--contact-header-height: 108px;
+	}
+}
+@media (max-width: 767px) {
+	.contact-page {
+		--contact-header-height: 94px;
+		padding: 12px 24px;
+	}
+	.section-label {
+		font-size: 17px;
+		padding: 8px 18px;
+		margin-bottom: 12px;
+	}
+	.contact-grid {
+		gap: 16px;
+		justify-content: space-between;
+	}
+	.contact-copy h2 {
+		font-size: 26px;
+		letter-spacing: -0.8px;
+		margin: 6px 0;
+	}
+	.contact-copy .body-copy {
+		font-size: 12px;
+		line-height: 1.6;
+	}
+	.social-links {
+		margin: 8px 0 0;
+	}
+	.social-links a {
+		width: 44px;
+		height: 44px;
+	}
+	.contact-form-panel {
+		padding: 16px;
+	}
+	.contact-form-panel h3 {
+		font-size: 16px;
+	}
+	.form-description {
+		font-size: 11px;
+		margin-bottom: 12px;
+	}
+	.field :global(input),
+	.field :global(textarea) {
+		font-size: 16px;
+	}
+	.field :global(textarea) {
+		height: 80px;
+	}
+	.contact-form-panel :global(.send-button) {
+		min-height: 44px;
+		padding-block: 10px;
+	}
+}
+</style>
