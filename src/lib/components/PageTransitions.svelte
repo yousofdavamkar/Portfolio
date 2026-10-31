@@ -87,7 +87,7 @@ onNavigate((navigation) => {
 					? 1
 					: -1;
 	const slide = portfolioContact
-		? capturePageSlide(main, slideDirection, 0.85)
+		? capturePageSlide(main, slideDirection, 0.85, 'y')
 		: aboutSlide || projectDetail
 			? capturePageSlide(main, slideDirection)
 			: undefined;
@@ -181,7 +181,7 @@ onNavigate((navigation) => {
 						{
 							opacity: slide ? [1, 1] : [0, 1],
 							transform: slide
-								? [`translate3d(${-slide.distance}px, 0, 0)`, 'translate3d(0, 0, 0)']
+								? [slide.incomingTransform, 'translate3d(0, 0, 0)']
 								: [`translateY(${shared ? 0 : direction * 24}px)`, 'translateY(0px)']
 						},
 						{

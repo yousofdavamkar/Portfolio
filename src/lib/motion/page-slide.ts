@@ -7,10 +7,15 @@ export const pageSlideDuration = 0.48;
 export function capturePageSlide(
 	main: HTMLElement,
 	direction: 1 | -1,
-	duration = pageSlideDuration
+	duration = pageSlideDuration,
+	axis: 'x' | 'y' = 'x'
 ) {
 	const bounds = main.getBoundingClientRect();
-	const distance = bounds.width * direction;
+	const height =
+		axis === 'y' ? Math.min(bounds.height, Math.max(1, innerHeight - bounds.top)) : bounds.height;
+	const distance = (axis === 'y' ? height : bounds.width) * direction;
+	const translate = (offset: number) =>
+		axis === 'y' ? `translate3d(0, ${offset}px, 0)` : `translate3d(${offset}px, 0, 0)`;
 	const layer = document.createElement('div');
 	layer.dataset['pageSlideLayer'] = '';
 	layer.setAttribute('aria-hidden', 'true');
@@ -19,7 +24,7 @@ export function capturePageSlide(
 	layer.style.clipPath = `inset(0 ${Math.max(0, innerWidth - bounds.right)}px 0 ${Math.max(0, bounds.left)}px)`;
 	const outgoing = document.createElement('div');
 	outgoing.dataset['pageSlideOutgoing'] = '';
-	outgoing.style.cssText = `position:absolute;left:${bounds.x}px;top:${bounds.y}px;width:${bounds.width}px;height:${bounds.height}px;container-type:inline-size;will-change:transform;`;
+	outgoing.style.cssText = `position:absolute;left:${bounds.x}px;top:${bounds.y}px;width:${bounds.width}px;height:${height}px;${axis === 'y' ? 'overflow:clip;' : ''}container-type:inline-size;will-change:transform;`;
 	const copy = main.cloneNode(true);
 	if (copy instanceof HTMLElement) {
 		copy.removeAttribute('id');
@@ -40,10 +45,11 @@ export function capturePageSlide(
 	return {
 		distance,
 		duration,
+		incomingTransform: translate(-distance),
 		play() {
 			animation = animate(
 				outgoing,
-				{ transform: ['translate3d(0, 0, 0)', `translate3d(${distance}px, 0, 0)`] },
+				{ transform: ['translate3d(0, 0, 0)', translate(distance)] },
 				{ duration, ease: easeOut }
 			);
 			return Promise.resolve(animation).then(cancel);

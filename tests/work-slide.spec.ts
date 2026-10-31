@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 
-async function inspectSlide(page: Page, path: string, direction: 1 | -1) {
+async function inspectSlide(page: Page, path: string, direction: 1 | -1, axis: 'x' | 'y' = 'x') {
 	await page.waitForFunction((expected) => {
 		const outgoing = document.querySelector('[data-page-slide-outgoing]');
 		return location.pathname === expected && (outgoing?.getAnimations().length ?? 0) > 0;
@@ -22,14 +22,18 @@ async function inspectSlide(page: Page, path: string, direction: 1 | -1) {
 			previousX: previous.m41,
 			nextY: next.m42,
 			previousY: previous.m42,
-			width: incoming.getBoundingClientRect().width
+			width: incoming.getBoundingClientRect().width,
+			height: outgoing.getBoundingClientRect().height
 		};
 	});
-	expect(motion.nextX * direction).toBeLessThan(0);
-	expect(motion.previousX * direction).toBeGreaterThan(0);
-	expect(motion.nextY).toBe(0);
-	expect(motion.previousY).toBe(0);
-	expect(Math.abs((motion.previousX - motion.nextX) * direction - motion.width)).toBeLessThan(1);
+	const next = axis === 'y' ? motion.nextY : motion.nextX;
+	const previous = axis === 'y' ? motion.previousY : motion.previousX;
+	const distance = axis === 'y' ? motion.height : motion.width;
+	expect(next * direction).toBeLessThan(0);
+	expect(previous * direction).toBeGreaterThan(0);
+	expect(axis === 'y' ? motion.nextX : motion.nextY).toBe(0);
+	expect(axis === 'y' ? motion.previousX : motion.previousY).toBe(0);
+	expect(Math.abs((previous - next) * direction - distance)).toBeLessThan(1);
 	await expect(page.locator('[data-page-slide-layer]')).toHaveAttribute('aria-hidden', 'true');
 	await expect(page.locator('[data-page-slide-layer]')).toHaveCSS('pointer-events', 'none');
 	await page.evaluate(() => {
@@ -70,7 +74,7 @@ test('reduced motion skips the View Details slideshow', async ({ page }) => {
 });
 
 for (const width of [1440, 390]) {
-	test(`Portfolio and Contact slide smoothly in both directions at ${width}px`, async ({
+	test(`Portfolio and Contact slide vertically in both directions at ${width}px`, async ({
 		page
 	}) => {
 		await page.setViewportSize({ width, height: 900 });
@@ -84,16 +88,16 @@ for (const width of [1440, 390]) {
 		} else {
 			await page.locator('.work-page .section-next').click();
 		}
-		await inspectSlide(page, '/contact', -1);
+		await inspectSlide(page, '/contact', -1, 'y');
 		await expect(page.locator('.site-header')).toHaveCSS('transform', 'none');
 		await expect(page.getByRole('button', { name: 'Hire Me!', exact: true })).toBeVisible();
 		expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
 			true
 		);
 		await page.goBack();
-		await inspectSlide(page, '/work', 1);
+		await inspectSlide(page, '/work', 1, 'y');
 		await page.goForward();
-		await inspectSlide(page, '/contact', -1);
+		await inspectSlide(page, '/contact', -1, 'y');
 	});
 }
 
