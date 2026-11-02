@@ -69,8 +69,8 @@ onNavigate((navigation) => {
 			? captureSharedArt(main)
 			: portfolioContact
 				? captureSharedArt(main, {
-						artwork: to === '/contact' ? 'ornament' : 'contact',
-						replacement: to === '/contact' ? 'contact' : 'ornament'
+						artwork: 'none',
+						contactCards: true
 					})
 				: projectDetail
 					? captureSharedArt(main, { backdrop: false })
@@ -145,7 +145,7 @@ onNavigate((navigation) => {
 				outgoing?.cancel();
 				restore();
 				shared?.hideDestination();
-				if ((fromChapter === 1 || from === '/contact') && to === '/work') {
+				if (fromChapter === 1 && to === '/work') {
 					const candidate = main.querySelector<HTMLElement>('[data-after-ornament]');
 					if (candidate?.offsetWidth) {
 						preview = candidate;

@@ -1,75 +1,18 @@
 import { expect, type Page, test } from '@playwright/test';
 
-async function inspectArtwork(page: Page, targetName: 'contact' | 'ornament') {
-	const layer = page.locator('[data-shared-art-layer]');
-	const target = page.locator(`#main [data-shared-art="${targetName}"]`);
-	await expect(layer).toHaveCount(1);
-	await expect(page.locator('[data-page-slide-layer]')).toHaveCount(0);
-	await expect(layer.locator('[data-art-replacement]')).toHaveCount(1);
-	await expect(target).toHaveCSS('visibility', 'hidden');
-	const landing = await page.evaluate((name) => {
-		const ghost = document.querySelector('[data-art-ghost]');
-		const target = document.querySelector(`#main [data-shared-art="${name}"]`);
-		const main = document.querySelector('#main');
-		if (!ghost || !target || !main) throw new Error('Missing chapter artwork');
-		for (const animation of ghost.getAnimations({ subtree: true })) {
-			animation.pause();
-			animation.currentTime = Number(animation.effect?.getComputedTiming().endTime) - 0.01;
-		}
-		const cards = Array.from(ghost.querySelectorAll('[data-art-replacement] [data-contact-card]'));
-		const cardErrors = cards.map((card) => {
-			const real = target.querySelector(
-				`[data-contact-card="${card.getAttribute('data-contact-card')}"]`
-			);
-			if (!real) throw new Error('Missing real card');
-			const actual = card.getBoundingClientRect();
-			const expected = real.getBoundingClientRect();
-			return Math.max(
-				Math.abs(actual.x - expected.x),
-				Math.abs(actual.y - expected.y),
-				Math.abs(actual.width - expected.width),
-				Math.abs(actual.height - expected.height)
-			);
-		});
-		const actual = ghost.getBoundingClientRect();
-		const expected = target.getBoundingClientRect();
-		const transform = new DOMMatrix(getComputedStyle(main).transform);
-		return {
-			cardErrors,
-			error: Math.max(
-				Math.abs(actual.x - expected.x),
-				Math.abs(actual.y - expected.y),
-				Math.abs(actual.width - expected.width),
-				Math.abs(actual.height - expected.height)
-			),
-			x: transform.m41,
-			y: transform.m42
-		};
-	}, targetName);
-	expect(landing.error).toBeLessThan(1);
-	for (const error of landing.cardErrors) expect(error).toBeLessThan(1);
-	expect(landing.x).toBe(0);
-	expect(landing.y).toBe(0);
-	await expect(layer).toHaveAttribute('aria-hidden', 'true');
-	await expect(layer).toHaveCSS('pointer-events', 'none');
-	await page.evaluate(() => {
-		for (const animation of document
-			.querySelector('[data-art-ghost]')
-			?.getAnimations({ subtree: true }) ?? [])
-			animation.play();
-	});
-	await expect(layer).toHaveCount(0);
-	await expect(target).toHaveCSS('visibility', 'visible');
+async function settled(page: Page) {
+	await expect(page.locator('[data-shared-art-layer], [data-page-slide-layer]')).toHaveCount(0);
 	await expect(page.locator('#main')).toHaveCSS('opacity', '1');
 	await expect(page.locator('#main')).toHaveCSS('transform', 'none');
 }
 
 for (const width of [1440, 390]) {
-	test(`Portfolio and Contact exchange artwork with an in-place crossfade at ${width}px`, async ({
+	test(`Contact cards rotate independently while the Portfolio U stays in place at ${width}px`, async ({
 		page
 	}) => {
 		await page.setViewportSize({ width, height: 900 });
 		await page.goto('/work', { waitUntil: 'networkidle' });
+		const sourceBounds = await page.locator('.work-ornament').boundingBox();
 		if (width < 768) {
 			await page.getByRole('button', { name: 'Open navigation' }).click();
 			await page
@@ -78,53 +21,76 @@ for (const width of [1440, 390]) {
 				.click();
 		} else await page.locator('.work-page .section-next').click();
 		await expect(page).toHaveURL('/contact');
-		await expect(page.locator('[data-art-replacement] [data-contact-card]')).toHaveCount(2);
-		const rotation = await page
-			.locator('[data-art-replacement] [data-contact-card]')
-			.evaluateAll((cards) =>
-				cards.map((card) => {
-					const animation = card.getAnimations()[0];
-					if (!animation) throw new Error('Card has no rotation animation');
-					animation.pause();
-					animation.currentTime = Number(animation.effect?.getTiming().delay) + 300;
-					const matrix = new DOMMatrix(getComputedStyle(card).transform);
-					return { x: matrix.m13, y: matrix.m31 };
-				})
-			);
-		expect(rotation.every((card) => Math.abs(card.x) + Math.abs(card.y) > 0.1)).toBe(true);
-		await inspectArtwork(page, 'contact');
-		await expect(page.locator('.site-header')).toHaveCSS('transform', 'none');
+		await expect(
+			page.locator('[data-art-ghost], [data-art-replacement], [data-page-slide-layer]')
+		).toHaveCount(0);
+		const motion = await page.evaluate(() => {
+			const backdrop = document.querySelector('[data-art-page]');
+			const ornament = backdrop?.querySelector('.work-ornament');
+			if (!backdrop || !ornament) throw new Error('Missing outgoing Portfolio composition');
+			for (const animation of backdrop.getAnimations()) animation.pause();
+			const cards = Array.from(document.querySelectorAll('#main [data-contact-card]'));
+			const rotations = cards.map((card) => {
+				const animation = card.getAnimations()[0];
+				if (!animation) throw new Error('Missing card rotation');
+				animation.pause();
+				animation.currentTime = Number(animation.effect?.getTiming().delay) + 300;
+				const matrix = new DOMMatrix(getComputedStyle(card).transform);
+				return Math.abs(matrix.m13) + Math.abs(matrix.m31);
+			});
+			const main = document.querySelector('#main');
+			if (!main) throw new Error('Missing page');
+			const transform = new DOMMatrix(getComputedStyle(main).transform);
+			return {
+				ornament: ornament.getBoundingClientRect().toJSON(),
+				rotations,
+				x: transform.m41,
+				y: transform.m42
+			};
+		});
+		expect(motion.ornament).toMatchObject(sourceBounds ?? {});
+		expect(motion.rotations).toHaveLength(2);
+		expect(motion.rotations.every((rotation) => rotation > 0.1)).toBe(true);
+		expect(motion.x).toBe(0);
+		expect(motion.y).toBe(0);
+		await expect(page.locator('#main [data-shared-art="contact"]')).toHaveCSS(
+			'visibility',
+			'visible'
+		);
+		await page.evaluate(() => {
+			for (const element of document.querySelectorAll('[data-art-page], #main [data-contact-card]'))
+				for (const animation of element.getAnimations()) animation.play();
+		});
+		await settled(page);
+		for (const card of await page.locator('#main [data-contact-card]').all())
+			await expect(card).toHaveCSS('transform', 'none');
 		await page.getByRole('button', { name: 'Hire Me!', exact: true }).click();
 		await expect(page.getByRole('dialog')).toBeVisible();
 		await page.getByRole('button', { name: 'Close', exact: true }).click();
 		await page.goBack();
-		await inspectArtwork(page, 'ornament');
-		if (width >= 1024) await expect(page.locator('.project-preview')).toHaveCSS('opacity', '1');
+		await expect(page.locator('[data-art-ghost], [data-art-replacement]')).toHaveCount(0);
+		await settled(page);
+		await expect(page.locator('.work-ornament')).toHaveCSS('visibility', 'visible');
 		await page.goForward();
-		await inspectArtwork(page, 'contact');
+		await settled(page);
 	});
 }
 
-test('Contact artwork restores on interruption and reduced motion', async ({ page }) => {
+test('Independent card rotation resets on interruption and skips reduced motion', async ({
+	page
+}) => {
 	await page.goto('/work', { waitUntil: 'networkidle' });
 	await page.locator('.work-page .section-next').click();
 	await expect(page.locator('[data-shared-art-layer]')).toHaveCount(1);
-	await page
-		.getByRole('navigation', { name: 'Main navigation', exact: true })
-		.getByRole('link', { name: 'Home', exact: true })
-		.click();
-	await expect(page).toHaveURL('/');
-	await expect(page.locator('[data-shared-art-layer], [data-page-slide-layer]')).toHaveCount(0);
-	await expect(page.locator('#main')).toHaveCSS('opacity', '1');
+	await page.keyboard.press('Escape');
+	await settled(page);
+	for (const card of await page.locator('#main [data-contact-card]').all())
+		await expect(card).toHaveCSS('transform', 'none');
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.goto('/work', { waitUntil: 'networkidle' });
 	await page.locator('.work-page .section-next').click();
 	await expect(page).toHaveURL('/contact');
-	await expect(page.locator('[data-shared-art-layer], [data-page-slide-layer]')).toHaveCount(0);
-	await expect(page.locator('#main [data-shared-art="contact"]')).toHaveCSS(
-		'visibility',
-		'visible'
-	);
+	await settled(page);
 	expect(
 		await page
 			.locator('#main [data-contact-card]')

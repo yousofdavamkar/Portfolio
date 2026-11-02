@@ -13,10 +13,15 @@ function portraitClip(element: Artwork): string {
 	return `inset(${(Math.max(0, bounds.top - image.top) / image.height) * 100}% ${(Math.max(0, image.right - bounds.right) / image.width) * 100}% ${(Math.max(0, image.bottom - bounds.bottom) / image.height) * 100}% ${(Math.max(0, bounds.left - image.left) / image.width) * 100}%)`;
 }
 
-/** Animate the two real card surfaces independently inside the travelling artwork. */
-function rotateContactCards(root: Artwork, entering: boolean) {
+/** Animate the two real card surfaces independently in their own artwork. */
+function rotateContactCards(
+	root: Artwork,
+	entering: boolean,
+	transforms: Map<HTMLElement, string>
+) {
 	return Array.from(root.querySelectorAll<HTMLElement>('[data-contact-card]')).map(
 		(card, index) => {
+			transforms.set(card, card.style.transform);
 			const front = card.dataset['contactCard'] === 'front';
 			const folded = `perspective(900px) translate3d(0, ${front ? 12 : -10}%, 0) rotateX(${front ? 12 : -8}deg) rotateY(${front ? -75 : 65}deg) rotateZ(${front ? -35 : 45}deg)`;
 			const resting =
@@ -35,8 +40,8 @@ function rotateContactCards(root: Artwork, entering: boolean) {
 }
 
 type SharedArtOptions = {
-	artwork?: 'ornament' | 'project' | 'contact';
-	replacement?: 'ornament' | 'contact';
+	artwork?: 'ornament' | 'project' | 'none';
+	contactCards?: boolean;
 	backdrop?: boolean;
 };
 
@@ -51,6 +56,7 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 	if (shell)
 		layer.style.clipPath = `inset(0 ${Math.max(0, innerWidth - shell.right)}px 0 ${Math.max(0, shell.left)}px)`;
 	const visibilityBeforeTransition = new Map<Artwork, string>();
+	const cardTransforms = new Map<HTMLElement, string>();
 	const animations: ReturnType<typeof animate>[] = [];
 	const hide = (element: Artwork) => {
 		// Parameterized topic routes can reuse the same SVG for source and destination.
@@ -118,14 +124,14 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 		for (const [element, visibility] of visibilityBeforeTransition)
 			element.style.visibility = visibility;
 		visibilityBeforeTransition.clear();
+		for (const [card, transform] of cardTransforms) card.style.transform = transform;
+		cardTransforms.clear();
 		layer.remove();
 	};
 	return {
 		hideDestination() {
 			for (const { name } of items) {
-				const target = document.querySelector<Artwork>(
-					`#main [data-shared-art="${options.replacement ?? name}"]`
-				);
+				const target = document.querySelector<Artwork>(`#main [data-shared-art="${name}"]`);
 				if (target) hide(target);
 			}
 		},
@@ -135,10 +141,15 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 				animations.push(fade);
 				void fade.then(() => backdrop?.remove());
 			}
+			if (options.contactCards) {
+				// The U stays in the outgoing page. Cards rotate at their own final location.
+				const contact = main.querySelector<HTMLElement>('[data-shared-art="contact"]');
+				if (contact) animations.push(...rotateContactCards(contact, true, cardTransforms));
+				else if (backdrop) animations.push(...rotateContactCards(backdrop, false, cardTransforms));
+			}
+
 			for (const item of items) {
-				const target = document.querySelector<Artwork>(
-					`#main [data-shared-art="${options.replacement ?? item.name}"]`
-				);
+				const target = document.querySelector<Artwork>(`#main [data-shared-art="${item.name}"]`);
 				if (!target) {
 					item.wrapper.remove();
 					continue;
@@ -148,46 +159,6 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 					animations.push(animate(item.wrapper, { opacity: 0 }, { duration: 0.3 }));
 					continue;
 				}
-				if (options.replacement) {
-					// Different chapter artwork shares the same journey, dissolving as it lands.
-					const destination = target.cloneNode(true);
-					if (destination instanceof SVGSVGElement || destination instanceof HTMLElement) {
-						const targetStyle = getComputedStyle(target);
-						if (!(destination instanceof HTMLElement) || destination instanceof HTMLImageElement)
-							destination.removeAttribute('class');
-						destination.removeAttribute('id');
-						destination.removeAttribute('data-shared-art');
-						destination.setAttribute('data-art-replacement', '');
-						destination.style.cssText =
-							'position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;opacity:0;visibility:visible;transform:none;object-fit:fill;';
-						if (destination instanceof HTMLElement && !(destination instanceof HTMLImageElement)) {
-							// Lay out live text at its final size, then fit it inside the travelling box.
-							// This avoids stretched lettering and a size jump when the real cards return.
-							destination.style.width = `${end.width}px`;
-							destination.style.height = `${end.height}px`;
-							destination.style.transformOrigin = '0 0';
-							destination.style.transform = `scale(${item.rect.width / end.width}, ${item.rect.height / end.height})`;
-						}
-						destination.style.stroke = targetStyle.stroke;
-						destination.style.strokeWidth = targetStyle.strokeWidth;
-						item.wrapper.append(destination);
-						if (options.replacement === 'contact')
-							animations.push(...rotateContactCards(destination, true));
-						if (item.name === 'contact') animations.push(...rotateContactCards(item.image, false));
-						animations.push(
-							animate(
-								item.image,
-								{ opacity: [1, 0] },
-								{ duration: 0.65, delay: 0.12, ease: travelEase }
-							),
-							animate(
-								destination,
-								{ opacity: [0, 1] },
-								{ duration: 0.7, delay: 0.25, ease: travelEase }
-							)
-						);
-					}
-				}
 				const angle = Number(target.dataset['artAngle'] ?? 0);
 				const scaleX = end.width / item.rect.width;
 				const scaleY = end.height / item.rect.height;
@@ -195,10 +166,9 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 				const x = end.x + (end.width - item.rect.width) / 2;
 				const y = end.y + (end.height - item.rect.height) / 2;
 				const ornament = item.name === 'ornament';
-				const bendDistance =
-					ornament || options.replacement
-						? Math.min(35, Math.hypot(end.x - item.rect.x, end.y - item.rect.y) * 0.08)
-						: 0;
+				const bendDistance = ornament
+					? Math.min(35, Math.hypot(end.x - item.rect.x, end.y - item.rect.y) * 0.08)
+					: 0;
 				// Sample a continuous arc rather than two straight segments meeting at a corner.
 				// One easing curve drives position, rotation and scale for the entire journey.
 				const transforms = Array.from({ length: 61 }, (_, index) => {
@@ -219,7 +189,7 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 						{ duration: travelDuration, ease: travelEase }
 					)
 				);
-				if (ornament && !options.replacement)
+				if (ornament)
 					animations.push(
 						animate(
 							item.image,
