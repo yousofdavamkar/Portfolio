@@ -16,10 +16,26 @@ async function inspectArtwork(page: Page, targetName: 'contact' | 'ornament') {
 			animation.pause();
 			animation.currentTime = Number(animation.effect?.getComputedTiming().endTime) - 0.01;
 		}
+		const cards = Array.from(ghost.querySelectorAll('[data-art-replacement] [data-contact-card]'));
+		const cardErrors = cards.map((card) => {
+			const real = target.querySelector(
+				`[data-contact-card="${card.getAttribute('data-contact-card')}"]`
+			);
+			if (!real) throw new Error('Missing real card');
+			const actual = card.getBoundingClientRect();
+			const expected = real.getBoundingClientRect();
+			return Math.max(
+				Math.abs(actual.x - expected.x),
+				Math.abs(actual.y - expected.y),
+				Math.abs(actual.width - expected.width),
+				Math.abs(actual.height - expected.height)
+			);
+		});
 		const actual = ghost.getBoundingClientRect();
 		const expected = target.getBoundingClientRect();
 		const transform = new DOMMatrix(getComputedStyle(main).transform);
 		return {
+			cardErrors,
 			error: Math.max(
 				Math.abs(actual.x - expected.x),
 				Math.abs(actual.y - expected.y),
@@ -31,6 +47,7 @@ async function inspectArtwork(page: Page, targetName: 'contact' | 'ornament') {
 		};
 	}, targetName);
 	expect(landing.error).toBeLessThan(1);
+	for (const error of landing.cardErrors) expect(error).toBeLessThan(1);
 	expect(landing.x).toBe(0);
 	expect(landing.y).toBe(0);
 	await expect(layer).toHaveAttribute('aria-hidden', 'true');
@@ -61,6 +78,20 @@ for (const width of [1440, 390]) {
 				.click();
 		} else await page.locator('.work-page .section-next').click();
 		await expect(page).toHaveURL('/contact');
+		await expect(page.locator('[data-art-replacement] [data-contact-card]')).toHaveCount(2);
+		const rotation = await page
+			.locator('[data-art-replacement] [data-contact-card]')
+			.evaluateAll((cards) =>
+				cards.map((card) => {
+					const animation = card.getAnimations()[0];
+					if (!animation) throw new Error('Card has no rotation animation');
+					animation.pause();
+					animation.currentTime = Number(animation.effect?.getTiming().delay) + 300;
+					const matrix = new DOMMatrix(getComputedStyle(card).transform);
+					return { x: matrix.m13, y: matrix.m31 };
+				})
+			);
+		expect(rotation.every((card) => Math.abs(card.x) + Math.abs(card.y) > 0.1)).toBe(true);
 		await inspectArtwork(page, 'contact');
 		await expect(page.locator('.site-header')).toHaveCSS('transform', 'none');
 		await page.getByRole('button', { name: 'Hire Me!', exact: true }).click();
@@ -94,4 +125,9 @@ test('Contact artwork restores on interruption and reduced motion', async ({ pag
 		'visibility',
 		'visible'
 	);
+	expect(
+		await page
+			.locator('#main [data-contact-card]')
+			.evaluateAll((cards) => cards.every((card) => card.getAnimations().length === 0))
+	).toBe(true);
 });

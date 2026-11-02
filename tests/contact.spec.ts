@@ -14,11 +14,8 @@ test('Contact fits the viewport with its artwork and keeps the form behind Hire 
 		await expect(page.getByRole('heading', { name: /Contact me/, level: 1 })).toBeVisible();
 		await expect(page.locator('.scene-graphics')).toHaveCount(0);
 		await expect(page.getByRole('dialog')).toHaveCount(0);
-		expect(
-			await page
-				.locator('.contact-artwork img')
-				.evaluate((image) => image instanceof HTMLImageElement && image.naturalWidth > 0)
-		).toBe(true);
+		await expect(page.locator('.contact-artwork [data-contact-card]')).toHaveCount(2);
+		await expect(page.locator('.contact-artwork img')).toHaveCount(0);
 		expect(
 			await page.evaluate(
 				() =>

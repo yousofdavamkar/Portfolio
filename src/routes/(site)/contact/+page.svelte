@@ -9,7 +9,7 @@ import {
 	Send
 } from '@lucide/svelte';
 import { getContext } from 'svelte';
-import MediaImage from '#lib/components/MediaImage.svelte';
+import ContactArtwork from '#lib/components/ContactArtwork.svelte';
 import { Button } from '#lib/components/ui/button/index.js';
 import * as Dialog from '#lib/components/ui/dialog/index.js';
 import { Input } from '#lib/components/ui/input/index.js';
@@ -150,14 +150,9 @@ const profile = $derived(portfolio.content.profile);
 		</nav>
 	</div>
 	<div data-reveal class="contact-illustration" aria-hidden="true">
-		<MediaImage
-			class="contact-artwork"
-			sharedArt="contact"
-			src="/images/contact-art.png"
-			alt=""
-			width={1277}
-			height={1231}
-			loading="eager"
+		<ContactArtwork
+			name={profile?.name ?? 'Yousof Davamkar'}
+			role={profile?.role ?? 'Fullstack web developer'}
 		/>
 	</div>
 	<Button href="/" variant="outline" size="icon" class="section-next" aria-label="Back to home"

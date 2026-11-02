@@ -13,6 +13,27 @@ function portraitClip(element: Artwork): string {
 	return `inset(${(Math.max(0, bounds.top - image.top) / image.height) * 100}% ${(Math.max(0, image.right - bounds.right) / image.width) * 100}% ${(Math.max(0, image.bottom - bounds.bottom) / image.height) * 100}% ${(Math.max(0, bounds.left - image.left) / image.width) * 100}%)`;
 }
 
+/** Animate the two real card surfaces independently inside the travelling artwork. */
+function rotateContactCards(root: Artwork, entering: boolean) {
+	return Array.from(root.querySelectorAll<HTMLElement>('[data-contact-card]')).map(
+		(card, index) => {
+			const front = card.dataset['contactCard'] === 'front';
+			const folded = `perspective(900px) translate3d(0, ${front ? 12 : -10}%, 0) rotateX(${front ? 12 : -8}deg) rotateY(${front ? -75 : 65}deg) rotateZ(${front ? -35 : 45}deg)`;
+			const resting =
+				'perspective(900px) translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg)';
+			return animate(
+				card,
+				{ transform: entering ? [folded, resting] : [resting, folded] },
+				{
+					duration: entering ? 0.82 : 0.6,
+					delay: entering ? 0.12 + index * 0.1 : index * 0.06,
+					ease: travelEase
+				}
+			);
+		}
+	);
+}
+
 type SharedArtOptions = {
 	artwork?: 'ornament' | 'project' | 'contact';
 	replacement?: 'ornament' | 'contact';
@@ -130,17 +151,29 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 				if (options.replacement) {
 					// Different chapter artwork shares the same journey, dissolving as it lands.
 					const destination = target.cloneNode(true);
-					if (destination instanceof SVGSVGElement || destination instanceof HTMLImageElement) {
+					if (destination instanceof SVGSVGElement || destination instanceof HTMLElement) {
 						const targetStyle = getComputedStyle(target);
-						destination.removeAttribute('class');
+						if (!(destination instanceof HTMLElement) || destination instanceof HTMLImageElement)
+							destination.removeAttribute('class');
 						destination.removeAttribute('id');
 						destination.removeAttribute('data-shared-art');
 						destination.setAttribute('data-art-replacement', '');
 						destination.style.cssText =
 							'position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;opacity:0;visibility:visible;transform:none;object-fit:fill;';
+						if (destination instanceof HTMLElement && !(destination instanceof HTMLImageElement)) {
+							// Lay out live text at its final size, then fit it inside the travelling box.
+							// This avoids stretched lettering and a size jump when the real cards return.
+							destination.style.width = `${end.width}px`;
+							destination.style.height = `${end.height}px`;
+							destination.style.transformOrigin = '0 0';
+							destination.style.transform = `scale(${item.rect.width / end.width}, ${item.rect.height / end.height})`;
+						}
 						destination.style.stroke = targetStyle.stroke;
 						destination.style.strokeWidth = targetStyle.strokeWidth;
 						item.wrapper.append(destination);
+						if (options.replacement === 'contact')
+							animations.push(...rotateContactCards(destination, true));
+						if (item.name === 'contact') animations.push(...rotateContactCards(item.image, false));
 						animations.push(
 							animate(
 								item.image,
