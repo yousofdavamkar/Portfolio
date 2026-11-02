@@ -90,6 +90,8 @@ onNavigate((navigation) => {
 				? 1
 				: -1;
 	const slide = aboutSlide || projectDetail ? capturePageSlide(main, slideDirection) : undefined;
+	// Capture the scroll-driven pose first, then restore the live elements for the destination.
+	document.dispatchEvent(new Event('portfolio:scroll-captured'));
 	const current = generation;
 	let preview: HTMLElement | null = null;
 	let previewOpacity = '';

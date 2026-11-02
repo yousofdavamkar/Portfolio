@@ -152,3 +152,81 @@ test('touch swipes navigate at the edge and leave short or horizontal gestures a
 	await swipe(190, 500);
 	await ready(page, '/work');
 });
+
+test('successive scrolls with a stationary pointer navigate all chapters in both directions', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 1440, height: 1000 });
+	await page.goto('/', { waitUntil: 'networkidle' });
+	await ready(page, '/');
+	await page.mouse.move(1100, 500);
+	for (const path of ['/about', '/work', '/contact']) {
+		await page.waitForTimeout(350);
+		await page.mouse.wheel(0, 150);
+		await ready(page, path);
+	}
+	for (const path of ['/work', '/about', '/']) {
+		await page.waitForTimeout(350);
+		await page.mouse.wheel(0, -150);
+		await ready(page, path);
+	}
+});
+
+test('a new trackpad burst unlocks without moving the pointer, while decaying momentum stays put', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 1440, height: 1000 });
+	await page.goto('/about', { waitUntil: 'networkidle' });
+	await ready(page, '/about');
+	await page.mouse.move(700, 500);
+	await page.mouse.wheel(0, 140);
+	for (let i = 0; i < 22; i++) {
+		await page.waitForTimeout(80);
+		await page.mouse.wheel(0, Math.max(2, 25 - i));
+	}
+	await ready(page, '/work');
+	await page.mouse.wheel(0, 140);
+	await ready(page, '/contact');
+});
+
+test('partial scrolling scrubs artwork depth and settles back; reduced motion keeps artwork still', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 1440, height: 1000 });
+	await page.goto('/work', { waitUntil: 'networkidle' });
+	await ready(page, '/work');
+	await page.mouse.move(700, 500);
+	await page.mouse.wheel(0, 55);
+	await expect
+		.poll(() => page.locator('.project-art').evaluate((el) => Number(el.style.scale || 1)))
+		.toBeGreaterThan(1.02);
+	await expect
+		.poll(() =>
+			page.locator('.project-copy h2').evaluate((el) => Number(getComputedStyle(el).opacity))
+		)
+		.toBeLessThan(0.95);
+	await expect(page).toHaveURL('/work');
+	await expect(page.locator('.project-art')).toHaveCSS('scale', 'none');
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	await page.mouse.wheel(0, 55);
+	await expect(page.locator('.project-art')).toHaveCSS('scale', 'none');
+	await expect(page).toHaveURL('/work');
+});
+
+test('a menu click wins during the scroll departure and restores all artwork styles', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 1440, height: 1000 });
+	await page.goto('/about', { waitUntil: 'networkidle' });
+	await ready(page, '/about');
+	await page.mouse.move(700, 500);
+	await page.mouse.wheel(0, 150);
+	await page
+		.getByRole('navigation', { name: 'Main navigation', exact: true })
+		.getByRole('link', { name: 'Contact me' })
+		.click();
+	await ready(page, '/contact');
+	await page.waitForTimeout(400);
+	await expect(page).toHaveURL('/contact');
+	await expect(page.locator('.contact-artwork')).toHaveCSS('scale', 'none');
+});

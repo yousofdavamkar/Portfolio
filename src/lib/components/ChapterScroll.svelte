@@ -1,5 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
+import { createChapterDepth } from '#lib/motion/chapter-depth.js';
+import { motionAllowed } from '#lib/motion/scene.js';
 import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 import { page } from '$app/state';
 
@@ -13,8 +15,10 @@ const index = $derived(chapters.findIndex((chapter) => chapter.path === page.url
 let progress = $state(0);
 let mounted = $state(false);
 let pending = false;
+let gestureGeneration = 0;
 let resetGesture = () => {};
 beforeNavigate(() => {
+	gestureGeneration++;
 	pending = true;
 	resetGesture();
 });
@@ -25,6 +29,10 @@ afterNavigate(() => {
 
 onMount(() => {
 	mounted = true;
+	const depth = createChapterDepth();
+	let previousMagnitude = 0;
+	let lastDeparture = 0;
+	let departure: ReturnType<typeof setTimeout> | undefined;
 	let lastWheel = 0;
 	let wheelTotal = 0;
 	let consumed = false;
@@ -61,7 +69,7 @@ onMount(() => {
 		// Nested scroll regions own their entire gesture, including overscroll at their edges.
 		for (
 			let element: Element | null = target;
-			element && element !== document.body;
+			element && element !== document.body && element !== document.documentElement;
 			element = element.parentElement
 		) {
 			const style = getComputedStyle(element);
@@ -74,14 +82,24 @@ onMount(() => {
 		const next = neighbor(direction);
 		if (!next || blocked()) return;
 		document.documentElement.dataset['input'] = input;
+		const generation = ++gestureGeneration;
 		pending = true;
+		lastDeparture = performance.now();
 		consumed = true;
 		progress = 0;
 		// Use the same router as the menu: shared U, portrait, and card animations stay intact.
-		void goto(next.path).catch(() => {
-			pending = false;
-			reset();
-		});
+		const commit = () => {
+			if (generation !== gestureGeneration) return;
+			void goto(next.path).catch(() => {
+				pending = false;
+				depth.reset();
+				reset();
+			});
+		};
+		if (input === 'pointer' && motionAllowed()) {
+			depth.set(direction);
+			departure = setTimeout(commit, 220);
+		} else commit();
 	};
 	const wheel = (event: WheelEvent) => {
 		if (
@@ -92,18 +110,28 @@ onMount(() => {
 			Math.abs(event.deltaX) >= Math.abs(event.deltaY)
 		)
 			return;
-		const target = event.target instanceof Element ? event.target : null;
+		// Hit-test the live scene, rather than a wheel target latched before a route change.
+		const target =
+			document.elementFromPoint(event.clientX, event.clientY) ??
+			(event.target instanceof Element ? event.target : null);
 		if (!target) return;
 		const now = performance.now();
-		if (now - lastWheel > 240) {
+		const magnitude = Math.abs(event.deltaY);
+		const freshBurst =
+			!blocked() && now - lastDeparture > 1000 && magnitude > previousMagnitude * 1.65 + 6;
+		if (now - lastWheel > 240 || freshBurst) {
 			consumed = false;
 			wheelTotal = 0;
 		}
 		lastWheel = now;
+		previousMagnitude = magnitude;
 		clearTimeout(idle);
 		idle = setTimeout(() => {
 			progress = 0;
 			wheelTotal = 0;
+			consumed = false;
+			previousMagnitude = 0;
+			if (!blocked()) depth.set(0);
 		}, 240);
 		const direction = Math.sign(event.deltaY);
 		if (blocked()) {
@@ -129,7 +157,9 @@ onMount(() => {
 		if (Math.sign(wheelTotal) !== direction) wheelTotal = 0;
 		const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;
 		wheelTotal += event.deltaY * unit;
+		document.documentElement.dataset['input'] = 'pointer';
 		progress = Math.max(-1, Math.min(1, wheelTotal / threshold));
+		depth.set(progress);
 		if (Math.abs(wheelTotal) >= threshold) navigate(direction);
 	};
 	const touchstart = (event: TouchEvent) => {
@@ -159,7 +189,9 @@ onMount(() => {
 		if (!neighbor(Math.sign(delta))) return;
 		touch.claimed = true;
 		event.preventDefault();
+		document.documentElement.dataset['input'] = 'pointer';
 		progress = Math.max(-1, Math.min(1, delta / 80));
+		depth.set(progress);
 	};
 	const touchend = (event: TouchEvent) => {
 		const point = event.changedTouches.item(0);
@@ -168,6 +200,7 @@ onMount(() => {
 		progress = 0;
 		if (gesture?.claimed && point && Math.abs(gesture.y - point.clientY) >= 80)
 			navigate(Math.sign(gesture.y - point.clientY));
+		else depth.set(0);
 	};
 	const keydown = (event: KeyboardEvent) => {
 		if (
@@ -194,25 +227,48 @@ onMount(() => {
 		event.preventDefault();
 		navigate(direction, 'keyboard');
 	};
+	const interrupt = () => {
+		clearTimeout(departure);
+		gestureGeneration++;
+		pending = false;
+		reset();
+		depth.reset();
+	};
+	const nativeScroll = () => {
+		if (blocked()) return;
+		const room = document.documentElement.scrollHeight - innerHeight;
+		if (room > 20) depth.set(Math.min(0.3, (scrollY / room) * 0.3));
+	};
+	const preference = matchMedia('(prefers-reduced-motion: reduce)');
+	document.addEventListener('portfolio:scroll-captured', depth.reset);
+	window.addEventListener('scroll', nativeScroll, { passive: true });
+	window.addEventListener('keydown', interrupt);
+	window.addEventListener('pointerdown', interrupt);
+	preference.addEventListener('change', interrupt);
 	window.addEventListener('wheel', wheel, { passive: false });
 	window.addEventListener('touchstart', touchstart, { passive: true });
 	window.addEventListener('touchmove', touchmove, { passive: false });
 	window.addEventListener('touchend', touchend);
-	window.addEventListener('touchcancel', reset);
+	window.addEventListener('touchcancel', interrupt);
 	window.addEventListener('keydown', keydown);
-	window.addEventListener('resize', reset);
-	document.addEventListener('visibilitychange', reset);
+	window.addEventListener('resize', interrupt);
+	document.addEventListener('visibilitychange', interrupt);
 	return () => {
-		reset();
+		interrupt();
+		document.removeEventListener('portfolio:scroll-captured', depth.reset);
+		window.removeEventListener('scroll', nativeScroll);
+		window.removeEventListener('keydown', interrupt);
+		window.removeEventListener('pointerdown', interrupt);
+		preference.removeEventListener('change', interrupt);
 		resetGesture = () => {};
 		window.removeEventListener('wheel', wheel);
 		window.removeEventListener('touchstart', touchstart);
 		window.removeEventListener('touchmove', touchmove);
 		window.removeEventListener('touchend', touchend);
-		window.removeEventListener('touchcancel', reset);
+		window.removeEventListener('touchcancel', interrupt);
 		window.removeEventListener('keydown', keydown);
-		window.removeEventListener('resize', reset);
-		document.removeEventListener('visibilitychange', reset);
+		window.removeEventListener('resize', interrupt);
+		document.removeEventListener('visibilitychange', interrupt);
 	};
 });
 </script>
