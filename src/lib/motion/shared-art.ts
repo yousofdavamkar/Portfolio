@@ -30,8 +30,8 @@ function rotateContactCards(
 				card,
 				{ transform: entering ? [folded, resting] : [resting, folded] },
 				{
-					duration: entering ? 0.82 : 0.6,
-					delay: entering ? 0.12 + index * 0.1 : index * 0.06,
+					duration: 0.82,
+					delay: entering ? 0.12 + index * 0.1 : (1 - index) * 0.1,
 					ease: travelEase
 				}
 			);
@@ -137,7 +137,18 @@ export function captureSharedArt(main: HTMLElement, options: SharedArtOptions = 
 		},
 		play() {
 			if (backdrop) {
-				const fade = animate(backdrop, { opacity: [1, 0] }, { duration: 0.38, ease: 'easeInOut' });
+				// Keep the outgoing cards visible through their reverse rotation.
+				const leavingContact =
+					options.contactCards && backdrop.querySelector('[data-contact-card]');
+				const fade = animate(
+					backdrop,
+					{ opacity: [1, 0] },
+					{
+						duration: leavingContact ? 0.74 : 0.38,
+						delay: leavingContact ? 0.18 : 0,
+						ease: 'easeInOut'
+					}
+				);
 				animations.push(fade);
 				void fade.then(() => backdrop?.remove());
 			}

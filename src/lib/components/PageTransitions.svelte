@@ -62,6 +62,7 @@ onNavigate((navigation) => {
 		(fromChapter === 1 && to === '/work') || (from === '/work' && toChapter === 1);
 	const portfolioContact =
 		(fromChapter === 2 && to === '/contact') || (from === '/contact' && toChapter === 2);
+	const returningFromContact = from === '/contact' && toChapter === 2;
 	const projectDetail =
 		(from === '/work' && to.startsWith('/work/')) || (from.startsWith('/work/') && to === '/work');
 	const shared =
@@ -182,7 +183,14 @@ onNavigate((navigation) => {
 								: [`translateY(${shared ? 0 : direction * 24}px)`, 'translateY(0px)']
 						},
 						{
-							duration: slide ? pageSlideDuration : shared ? 0.46 : 0.32,
+							duration: slide
+								? pageSlideDuration
+								: returningFromContact
+									? 0.74
+									: shared
+										? 0.46
+										: 0.32,
+							delay: returningFromContact ? 0.18 : 0,
 							ease: shared && !slide ? 'easeInOut' : easeOut
 						}
 					);

@@ -69,6 +69,40 @@ for (const width of [1440, 390]) {
 		await page.getByRole('button', { name: 'Close', exact: true }).click();
 		await page.goBack();
 		await expect(page.locator('[data-art-ghost], [data-art-replacement]')).toHaveCount(0);
+		await expect
+			.poll(() =>
+				page
+					.locator('[data-art-page] [data-contact-card]')
+					.evaluateAll((cards) => cards.filter((card) => card.getAnimations().length > 0).length)
+			)
+			.toBe(2);
+		const reverse = await page.evaluate(() => {
+			const backdrop = document.querySelector('[data-art-page]');
+			if (!backdrop) throw new Error('Missing outgoing Contact composition');
+			for (const animation of backdrop.getAnimations({ subtree: true })) {
+				animation.pause();
+				animation.currentTime = 400;
+			}
+			const cards = Array.from(backdrop.querySelectorAll('[data-contact-card]'));
+			return {
+				opacity: Number(getComputedStyle(backdrop).opacity),
+				rotations: cards.map((card) => {
+					const matrix = new DOMMatrix(getComputedStyle(card).transform);
+					return Math.abs(matrix.m13) + Math.abs(matrix.m31);
+				}),
+				delays: cards.map((card) => card.getAnimations()[0]?.effect?.getTiming().delay)
+			};
+		});
+		expect(reverse.opacity).toBeGreaterThan(0.75);
+		expect(reverse.rotations).toHaveLength(2);
+		expect(reverse.rotations.every((rotation) => rotation > 0.1)).toBe(true);
+		expect(reverse.delays).toEqual([100, 0]);
+		await page.evaluate(() => {
+			for (const animation of document
+				.querySelector('[data-art-page]')
+				?.getAnimations({ subtree: true }) ?? [])
+				animation.play();
+		});
 		await settled(page);
 		await expect(page.locator('.work-ornament')).toHaveCSS('visibility', 'visible');
 		await page.goForward();
@@ -96,4 +130,20 @@ test('Independent card rotation resets on interruption and skips reduced motion'
 			.locator('#main [data-contact-card]')
 			.evaluateAll((cards) => cards.every((card) => card.getAnimations().length === 0))
 	).toBe(true);
+});
+
+test('Contact return animation works through the menu and cleans up when interrupted', async ({
+	page
+}) => {
+	await page.goto('/contact', { waitUntil: 'networkidle' });
+	await page
+		.getByRole('navigation', { name: 'Main navigation' })
+		.getByRole('link', { name: 'Portfolio', exact: true })
+		.click();
+	await expect(page).toHaveURL('/work');
+	await expect(page.locator('[data-art-page] [data-contact-card]')).toHaveCount(2);
+	await page.keyboard.press('Escape');
+	await settled(page);
+	await expect(page.locator('.work-ornament')).toHaveCSS('visibility', 'visible');
+	await expect(page.locator('[data-contact-card]')).toHaveCount(0);
 });
