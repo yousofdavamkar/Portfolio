@@ -40,6 +40,11 @@ onMount(() => {
 		introComplete = true;
 	};
 	const tick = (now: number) => {
+		if (document.querySelector('[data-site-intro]')) {
+			started = now;
+			frame = requestAnimationFrame(tick);
+			return;
+		}
 		if (introStage < 0) {
 			if (now - started < 550) {
 				frame = requestAnimationFrame(tick);

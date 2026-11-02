@@ -5,6 +5,7 @@ test('types each message in order, then hides the indicator without shifting the
 }) => {
 	await page.route('**/api/resume', (route) => route.fulfill({ json: { url: null } }));
 	await page.goto('/');
+	await expect(page.locator('[data-site-intro]')).toHaveCount(0, { timeout: 6500 });
 	const indicator = page.locator('.intro-label');
 	const greeting = page.locator('.greeting');
 	const introduction = page.locator('.intro-title');
@@ -35,10 +36,11 @@ test('a slow resume types the correct final message before the indicator disappe
 	page
 }) => {
 	await page.route('**/api/resume', async (route) => {
-		await new Promise((resolve) => setTimeout(resolve, 3600));
+		await new Promise((resolve) => setTimeout(resolve, 5200));
 		await route.fulfill({ json: { url: 'https://example.com/resume.pdf' } });
 	});
 	await page.goto('/');
+	await page.getByRole('button', { name: 'Skip intro' }).click();
 	await expect(page.getByRole('status', { name: 'Loading resume' })).toBeVisible({ timeout: 5000 });
 	await expect(page.locator('.intro-label')).toBeVisible();
 	await expect(page.locator('.intro-label')).toBeHidden({ timeout: 8000 });
@@ -59,6 +61,7 @@ test('reduced motion and keyboard input reveal the entire introduction immediate
 	await expect(page.locator('.resume-bubble')).toBeVisible();
 	await page.emulateMedia({ reducedMotion: 'no-preference' });
 	await page.reload();
+	await expect(page.locator('.site-shell')).toHaveAttribute('inert', '');
 	await expect(page.locator('.intro-label')).toBeVisible();
 	await page.keyboard.press('Tab');
 	await expect(page.locator('.intro-label')).toBeHidden();

@@ -22,6 +22,7 @@ const chapterIndex = (path: string) =>
 
 function setupScene(entrance: boolean) {
 	cleanupScene();
+	if (document.querySelector('[data-site-intro]')) return;
 	const root = document.querySelector<HTMLElement>('.site-shell');
 	cleanupScene = root ? animateScene(root, entrance) : () => {};
 }
@@ -232,6 +233,8 @@ onNavigate((navigation) => {
 });
 
 onMount(() => {
+	const introComplete = () => setupScene(true);
+	document.addEventListener('portfolio:intro-complete', introComplete);
 	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 	const preference = () => {
 		stop();
@@ -246,6 +249,7 @@ onMount(() => {
 	document.addEventListener('visibilitychange', visibility);
 	reducedMotion.addEventListener('change', preference);
 	return () => {
+		document.removeEventListener('portfolio:intro-complete', introComplete);
 		stop();
 		window.removeEventListener('keydown', stop);
 		window.removeEventListener('resize', stop);

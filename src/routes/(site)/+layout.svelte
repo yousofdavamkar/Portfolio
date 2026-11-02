@@ -2,6 +2,7 @@
 import { onMount, setContext, untrack } from 'svelte';
 import Header from '#lib/components/Header.svelte';
 import SceneGraphics from '#lib/components/SceneGraphics.svelte';
+import SiteIntro from '#lib/components/SiteIntro.svelte';
 import { PORTFOLIO, type PortfolioContext } from '#lib/state/portfolio.svelte.js';
 import { createProjectNavigation } from '#lib/state/project-navigation.js';
 import { PUBLIC_CONVEX_URL } from '$app/env/public';
@@ -52,6 +53,7 @@ onMount(() => {
 	};
 });
 </script>
+<SiteIntro />
 <a class="skip-link" href="#main">Skip to content</a>
 <div class="site-shell">
 	{#if page.url.pathname !== '/' &&

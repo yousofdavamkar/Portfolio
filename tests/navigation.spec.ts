@@ -5,6 +5,7 @@ function nav(page: Page) {
 }
 
 async function clickNavigation(page: Page, name: string) {
+	await expect(page.locator('[data-site-intro]')).toHaveCount(0, { timeout: 6500 });
 	const box = await nav(page).getByRole('link', { name, exact: true }).boundingBox();
 	if (!box) throw new Error(`Navigation link not visible: ${name}`);
 	// Real pointer input, without locator auto-wait masking mid-animation failures.
