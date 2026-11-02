@@ -1,5 +1,6 @@
 <script lang="ts">
 import { onMount, setContext, untrack } from 'svelte';
+import ChapterScroll from '#lib/components/ChapterScroll.svelte';
 import Header from '#lib/components/Header.svelte';
 import SceneGraphics from '#lib/components/SceneGraphics.svelte';
 import SiteIntro from '#lib/components/SiteIntro.svelte';
@@ -54,6 +55,7 @@ onMount(() => {
 });
 </script>
 <SiteIntro />
+<ChapterScroll />
 <a class="skip-link" href="#main">Skip to content</a>
 <div class="site-shell">
 	{#if page.url.pathname !== '/' &&
